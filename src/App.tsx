@@ -72,75 +72,75 @@ function App() {
       <GroupProvider>
         <BrowserRouter>
           <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              {/* Публичный маршрут - страница входа */}
-              <Route path="/login" element={<LoginPage />} />
-              
-              {/* Защищенные маршруты */}
-              
-              {/* Редирект на основе роли */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <RoleBasedDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* Dashboard для учителя - главная страница со списком групп */}
-              <Route
-                path="/teacher/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* Dashboard для ученика - расписание и активные задания */}
-              <Route
-                path="/student/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <StudentDashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* GroupDetails - детали группы (ученики, расписание, задания) */}
-              <Route
-                path="/groups/:id"
-                element={
-                  <ProtectedRoute>
-                    <GroupDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* NewHomework - форма создания нового задания */}
-              <Route
-                path="/groups/:id/homework/new"
-                element={
-                  <ProtectedRoute>
-                    <NewHomeworkPage />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* Редирект с корня на dashboard (с проверкой роли) */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <RoleBasedDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* Fallback для несуществующих маршрутов */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
+          <Routes>
+          {/* Публичный маршрут - страница входа */}
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Защищенные маршруты */}
+          
+          {/* Редирект на основе роли */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <RoleBasedDashboard />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Dashboard для учителя - главная страница со списком групп */}
+          <Route
+            path="/teacher/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Dashboard для ученика - расписание и активные задания */}
+          <Route
+            path="/student/dashboard"
+            element={
+              <ProtectedRoute>
+                <StudentDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* GroupDetails - детали группы (ученики, расписание, задания) */}
+          <Route
+            path="/groups/:id"
+            element={
+              <ProtectedRoute>
+                <GroupDetailsPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* NewHomework - форма создания нового задания */}
+          <Route
+            path="/groups/:id/homework/new"
+            element={
+              <ProtectedRoute>
+                <NewHomeworkPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Редирект с корня на dashboard (с проверкой роли) */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <RoleBasedDashboard />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Fallback для несуществующих маршрутов */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
           </Suspense>
         </BrowserRouter>
       </GroupProvider>

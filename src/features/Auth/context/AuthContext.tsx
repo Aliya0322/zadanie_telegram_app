@@ -12,6 +12,7 @@ export interface User {
   role: UserRole;
   email?: string;
   telegramId?: string;
+  timezone?: string;
 }
 
 interface AuthContextType {

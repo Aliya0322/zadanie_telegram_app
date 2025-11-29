@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Page, Navbar } from 'konsta/react';
 import { AcademicCapIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
+import { timezones, getDefaultTimezone } from '../utils/timezones';
 import logo from '../assets/images/logo.png';
 import styles from './Login.module.css';
 
@@ -20,6 +21,7 @@ const LoginPage: React.FC = () => {
     firstName: '',
     lastName: '',
     birthDate: '',
+    timezone: getDefaultTimezone(),
   });
   
   // Форма для учителя
@@ -28,7 +30,17 @@ const LoginPage: React.FC = () => {
     lastName: '',
     middleName: '',
     birthDate: '',
+    timezone: getDefaultTimezone(),
   });
+
+  // Устанавливаем часовой пояс по умолчанию при открытии формы
+  useEffect(() => {
+    if (isFormOpen) {
+      const defaultTz = getDefaultTimezone();
+      setStudentForm(prev => ({ ...prev, timezone: prev.timezone || defaultTz }));
+      setTeacherForm(prev => ({ ...prev, timezone: prev.timezone || defaultTz }));
+    }
+  }, [isFormOpen]);
 
   const handleRoleSelect = (role: 'teacher' | 'student') => {
     setSelectedRole(role);
@@ -46,8 +58,9 @@ const LoginPage: React.FC = () => {
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setSelectedRole(null);
-    setStudentForm({ firstName: '', lastName: '', birthDate: '' });
-    setTeacherForm({ firstName: '', lastName: '', middleName: '', birthDate: '' });
+    const defaultTz = getDefaultTimezone();
+    setStudentForm({ firstName: '', lastName: '', birthDate: '', timezone: defaultTz });
+    setTeacherForm({ firstName: '', lastName: '', middleName: '', birthDate: '', timezone: defaultTz });
   };
 
   const handleSubmitForm = async (e: React.FormEvent) => {
@@ -57,7 +70,7 @@ const LoginPage: React.FC = () => {
 
     // Валидация
     if (selectedRole === 'student') {
-      if (!studentForm.firstName.trim() || !studentForm.lastName.trim() || !studentForm.birthDate) {
+      if (!studentForm.firstName.trim() || !studentForm.lastName.trim() || !studentForm.birthDate || !studentForm.timezone) {
         if (window.Telegram?.WebApp) {
           window.Telegram.WebApp.showAlert('Пожалуйста, заполните все поля');
         } else {
@@ -66,7 +79,7 @@ const LoginPage: React.FC = () => {
         return;
       }
     } else {
-      if (!teacherForm.firstName.trim() || !teacherForm.lastName.trim() || !teacherForm.middleName.trim() || !teacherForm.birthDate) {
+      if (!teacherForm.firstName.trim() || !teacherForm.lastName.trim() || !teacherForm.middleName.trim() || !teacherForm.birthDate || !teacherForm.timezone) {
         if (window.Telegram?.WebApp) {
           window.Telegram.WebApp.showAlert('Пожалуйста, заполните все поля');
         } else {
@@ -88,6 +101,7 @@ const LoginPage: React.FC = () => {
         lastName: formData.lastName.trim(),
         middleName: selectedRole === 'teacher' ? teacherForm.middleName.trim() : undefined,
         birthDate: selectedRole === 'student' ? studentForm.birthDate : teacherForm.birthDate,
+        timezone: selectedRole === 'student' ? studentForm.timezone : teacherForm.timezone,
         role: selectedRole,
         telegramId: telegramUser?.id.toString(),
       };
@@ -258,6 +272,31 @@ const LoginPage: React.FC = () => {
                   disabled={isLoading}
                   max={new Date().toISOString().split('T')[0]}
                 />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Часовой пояс <span className={styles.required}>*</span>
+                </label>
+                <select
+                  value={selectedRole === 'student' ? studentForm.timezone : teacherForm.timezone}
+                  onChange={(e) => {
+                    if (selectedRole === 'student') {
+                      setStudentForm(prev => ({ ...prev, timezone: e.target.value }));
+                    } else {
+                      setTeacherForm(prev => ({ ...prev, timezone: e.target.value }));
+                    }
+                  }}
+                  className={styles.formSelect}
+                  required
+                  disabled={isLoading}
+                >
+                  {timezones.map((tz) => (
+                    <option key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className={styles.formActions}>

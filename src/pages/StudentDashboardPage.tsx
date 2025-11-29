@@ -159,12 +159,12 @@ const StudentDashboardPage = () => {
       />
 
       <div className={styles.content}>
-        {/* Приветствие */}
+      {/* Приветствие */}
         <div className={styles.greetingSection}>
           <span className={styles.greetingText}>Привет, {userName}!</span>
         </div>
 
-        {/* Моё расписание */}
+      {/* Моё расписание */}
         <Block className={styles.scheduleBlock}>
           <div className={styles.scheduleHeader}>
             <span className={styles.scheduleTitle}>
@@ -173,7 +173,7 @@ const StudentDashboardPage = () => {
           </div>
           
           <div className={styles.scheduleList}>
-            {mockSchedule.map((item, index) => (
+          {mockSchedule.map((item, index) => (
               <div key={index} className={styles.scheduleItem}>
                 <ClockIcon className={styles.clockIcon} />
                 <div className={styles.scheduleItemContent}>
@@ -204,32 +204,32 @@ const StudentDashboardPage = () => {
               </div>
             </div>
           </div>
-        </Block>
+      </Block>
 
-        {/* Мои активные задания */}
+      {/* Мои активные задания */}
         <div className={styles.groupsSection}>
           <h2 className={styles.groupsTitle}>МОИ АКТИВНЫЕ ЗАДАНИЯ</h2>
           
-          {isLoading ? (
+        {isLoading ? (
             <div className={styles.currentHomeworkCard}>
               <div className={`${styles.currentHomeworkText} ${styles.loadingText}`}>
                 Загрузка заданий...
               </div>
-            </div>
-          ) : activeHomework.length === 0 ? (
+          </div>
+        ) : activeHomework.length === 0 ? (
             <div className={styles.currentHomeworkCard}>
               <div className={`${styles.currentHomeworkText} ${styles.emptyText}`}>
                 Нет активных заданий
               </div>
-            </div>
-          ) : (
+          </div>
+        ) : (
             <div className={styles.groupsList}>
-              {activeHomework.map((homework) => {
-                const deadlineStatus = getDeadlineStatus(homework.dueDate);
+            {activeHomework.map((homework) => {
+              const deadlineStatus = getDeadlineStatus(homework.dueDate);
 
-                return (
+              return (
                   <div 
-                    key={homework.id} 
+                  key={homework.id}
                     className={`${styles.groupCard} ${styles.clickableCard}`}
                     onClick={() => {
                       setSelectedHomework(homework);
@@ -253,18 +253,18 @@ const StudentDashboardPage = () => {
                               }}
                             >
                               <ClockIcon className={styles.smallClockIcon} />
-                              {deadlineStatus.text}
+                          {deadlineStatus.text}
                             </div>
                             <span className={styles.deadlineText}>
-                              До: {formatDateTime(homework.dueDate)}
-                            </span>
+                          До: {formatDateTime(homework.dueDate)}
+                        </span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                );
-              })}
+              );
+            })}
             </div>
           )}
         </div>

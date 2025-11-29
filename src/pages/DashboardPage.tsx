@@ -274,7 +274,7 @@ const DashboardPage = () => {
           </div>
           
           <div className={styles.scheduleList}>
-            {mockSchedule.map((item, index) => (
+          {mockSchedule.map((item, index) => (
               <div key={index} className={styles.scheduleItem}>
                 <ClockIcon className={styles.clockIcon} />
                 <div className={styles.scheduleItemContent}>
@@ -284,20 +284,20 @@ const DashboardPage = () => {
                   <span className={styles.scheduleGroup}>({item.group})</span>
                 </div>
               </div>
-            ))}
+          ))}
           </div>
-        </Block>
+      </Block>
 
         {/* Мои группы */}
         <div className={styles.groupsSection}>
           <h2 className={styles.groupsTitle}>МОИ ГРУППЫ</h2>
           
           <div className={styles.groupsList}>
-            {mockGroups.map((group) => (
+          {mockGroups.map((group) => (
               <div 
-                key={group.id} 
+              key={group.id}
                 className={styles.groupCard}
-                onClick={() => handleGroupClick(group.id)}
+              onClick={() => handleGroupClick(group.id)}
               >
                 <div className={styles.groupCardContent}>
                   <div className={styles.groupInfo}>
