@@ -1,0 +1,966 @@
+/* src/features/Groups/GroupDetails.module.css */
+
+.page {
+  background-color: #f7f7f7;
+  min-height: 100vh;
+}
+
+.navbar {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #1f2937;
+  transition: opacity 0.2s;
+}
+
+.navButton:hover {
+  opacity: 0.7;
+}
+
+.navButton:active {
+  opacity: 0.5;
+}
+
+.navIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.content {
+  padding: 16px;
+  padding-bottom: 100px; /* Space for bottom button */
+}
+
+/* Сегментированный контрол */
+.segmentedControl {
+  display: flex;
+  background-color: #f3f4f6;
+  border-radius: 10px;
+  padding: 4px;
+  margin: 16px;
+  gap: 4px;
+}
+
+.segmentedButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.segmentedButton:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.segmentedButtonActive {
+  background-color: #3b82f6;
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.segmentedButtonActive:hover {
+  background-color: #2563eb;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+}
+
+.segmentedButtonIcon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Секции */
+.section {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #4b5563;
+  margin-bottom: 12px;
+  padding: 0 16px;
+}
+
+/* Карточка актуального задания */
+.currentHomeworkCard {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin: 0 16px;
+}
+
+.currentHomeworkItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.currentHomeworkItem:last-child {
+  margin-bottom: 0;
+}
+
+.currentHomeworkIcon {
+  width: 20px;
+  height: 20px;
+  color: #60a5fa;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.currentHomeworkContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.currentHomeworkText {
+  font-size: 15px;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.currentHomeworkLabel {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.currentHomeworkValue {
+  color: #1f2937;
+}
+
+/* Карточки прошлых заданий */
+.pastHomeworkList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.pastHomeworkCard {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.pastHomeworkCard:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.removeStudentButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  transition: all 0.2s;
+  border-radius: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.removeStudentButton:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.removeStudentButton:active {
+  background-color: #fecaca;
+  transform: scale(0.95);
+}
+
+.removeStudentIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.pastHomeworkIcon {
+  width: 24px;
+  height: 24px;
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.pastHomeworkContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pastHomeworkTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.pastHomeworkStatus {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Кнопка с плюсом для создания задания */
+.addHomeworkButton {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addHomeworkButton:hover {
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+.addHomeworkButton:active {
+  transform: translateX(-50%) translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.addHomeworkIcon {
+  width: 28px;
+  height: 28px;
+}
+
+/* Модальное окно создания домашнего задания */
+.homeworkModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.homeworkModalContent {
+  background-color: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.homeworkModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.homeworkModalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.homeworkModalCloseButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s;
+  z-index: 10;
+  border-radius: 8px;
+}
+
+.homeworkModalCloseButton:hover {
+  color: #1f2937;
+  background-color: #f3f4f6;
+}
+
+.homeworkModalCloseIcon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Форма создания домашнего задания */
+.homeworkForm {
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.formInput,
+.formTextarea,
+select.formInput {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #1f2937;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+select.formInput {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 36px;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.formInput:disabled,
+.formTextarea:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.formCancelButton,
+.formSubmitButton {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.formCancelButton {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.formCancelButton:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.formCancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.formSubmitButton {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.formSubmitButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.formSubmitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #9ca3af;
+  box-shadow: none;
+}
+
+/* Блок приглашения учеников */
+.inviteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 16px;
+}
+
+.inviteToggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s;
+  border-radius: 4px;
+}
+
+.inviteToggleButton:hover {
+  color: #1f2937;
+  background-color: #f3f4f6;
+}
+
+.inviteToggleIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.inviteBlock {
+  padding: 0 16px;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.inviteLinkCard {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.inviteLinkIcon {
+  width: 24px;
+  height: 24px;
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.inviteLinkContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.inviteLinkLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inviteLinkValue {
+  font-size: 13px;
+  color: #1f2937;
+  word-break: break-all;
+  line-height: 1.5;
+  font-family: monospace;
+}
+
+.inviteCopyButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+
+.inviteCopyButton:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.inviteCopyButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.inviteCopyIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.inviteHint {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Модальное окно подтверждения удаления */
+.deleteModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.deleteModalContent {
+  background-color: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.deleteModalHeader {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.deleteModalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.deleteModalBody {
+  padding: 20px;
+}
+
+.deleteModalText {
+  font-size: 15px;
+  color: #1f2937;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+}
+
+.deleteModalText strong {
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.deleteModalWarning {
+  font-size: 13px;
+  color: #ef4444;
+  margin: 0;
+  font-weight: 500;
+}
+
+.deleteModalActions {
+  display: flex;
+  gap: 12px;
+  padding: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.deleteCancelButton,
+.deleteConfirmButton {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deleteCancelButton {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.deleteCancelButton:hover {
+  background-color: #e5e7eb;
+}
+
+.deleteConfirmButton {
+  background-color: #ef4444;
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.deleteConfirmButton:hover {
+  background-color: #dc2626;
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
+}
+
+.deleteConfirmButton:active {
+  transform: scale(0.98);
+}
+
+/* Кнопка добавления занятия */
+.addScheduleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: calc(100% - 32px);
+  max-width: 600px;
+  padding: 12px 24px;
+  margin: 16px auto;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.addScheduleButton:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.addScheduleButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.addScheduleIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Адаптивность для кнопки добавления занятия */
+@media (max-width: 480px) {
+  .addScheduleButton {
+    width: calc(100% - 32px);
+    padding: 10px 16px;
+    font-size: 13px;
+    margin: 12px 16px;
+  }
+  
+  .addScheduleIcon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  .addScheduleButton {
+    max-width: 568px;
+  }
+}
+
+/* Кнопка редактирования расписания */
+.scheduleEditButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #3b82f6;
+  transition: all 0.2s;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.scheduleEditButton:hover {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.scheduleEditButton:active {
+  background-color: #bfdbfe;
+  transform: scale(0.95);
+}
+
+.scheduleEditIcon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Стили для загрузки файлов */
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.fileIcon {
+  font-size: 16px;
+}
+
+.fileName {
+  flex: 1;
+  color: #1f2937;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSize {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.fileRemoveButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s;
+  border-radius: 4px;
+}
+
+.fileRemoveButton:hover:not(:disabled) {
+  color: #ef4444;
+  background-color: #fee2e2;
+}
+
+.fileRemoveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fileRemoveIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.fileUploadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #f3f4f6;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.fileUploadButton:hover:not(:has(input:disabled)) {
+  background-color: #e5e7eb;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.fileUploadButton:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.fileUploadIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.fileHint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Дополнительные стили для вынесения inline стилей */
+.requiredStar {
+  color: #ef4444;
+}
+
+.iconBlue {
+  color: #3b82f6;
+}
+
+.iconGray {
+  color: #6b7280;
+}
+
+.flexContent {
+  flex: 1;
+}
+
+.smallStatusText {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.fileHintMargin {
+  margin-top: 4px;
+}
+
+.greenStatus {
+  color: #10b981;
+}
+
+/* Адаптивность для больших экранов */
+@media (min-width: 768px) {
+  .content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .segmentedControl {
+    max-width: 568px;
+    margin: 16px auto;
+  }
+  
+  .currentHomeworkCard {
+    max-width: 568px;
+    margin: 0 auto;
+  }
+  
+  .pastHomeworkList {
+    max-width: 568px;
+    margin: 0 auto;
+  }
+  
+  .createHomeworkButton {
+    max-width: 568px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .createHomeworkButton:hover {
+    transform: translateX(-50%) translateY(-2px);
+  }
+  
+  .createHomeworkButton:active {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+

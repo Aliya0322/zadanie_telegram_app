@@ -1,0 +1,289 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Page, Navbar } from 'konsta/react';
+import { AcademicCapIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../features/Auth/hooks/useAuth';
+import { useTelegram } from '../hooks/useTelegram';
+import logo from '../assets/images/logo.png';
+import styles from './Login.module.css';
+
+const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const { user: telegramUser, isTelegram } = useTelegram();
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'teacher' | 'student' | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  
+  // Форма для ученика
+  const [studentForm, setStudentForm] = useState({
+    firstName: '',
+    lastName: '',
+    birthDate: '',
+  });
+  
+  // Форма для учителя
+  const [teacherForm, setTeacherForm] = useState({
+    firstName: '',
+    lastName: '',
+    middleName: '',
+    birthDate: '',
+  });
+
+  const handleRoleSelect = (role: 'teacher' | 'student') => {
+    setSelectedRole(role);
+    setIsFormOpen(true);
+    // Заполняем имя из Telegram, если доступно
+    if (telegramUser?.firstName) {
+      if (role === 'student') {
+        setStudentForm(prev => ({ ...prev, firstName: telegramUser.firstName || '' }));
+      } else {
+        setTeacherForm(prev => ({ ...prev, firstName: telegramUser.firstName || '' }));
+      }
+    }
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setSelectedRole(null);
+    setStudentForm({ firstName: '', lastName: '', birthDate: '' });
+    setTeacherForm({ firstName: '', lastName: '', middleName: '', birthDate: '' });
+  };
+
+  const handleSubmitForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedRole) return;
+
+    // Валидация
+    if (selectedRole === 'student') {
+      if (!studentForm.firstName.trim() || !studentForm.lastName.trim() || !studentForm.birthDate) {
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.showAlert('Пожалуйста, заполните все поля');
+        } else {
+          alert('Пожалуйста, заполните все поля');
+        }
+        return;
+      }
+    } else {
+      if (!teacherForm.firstName.trim() || !teacherForm.lastName.trim() || !teacherForm.middleName.trim() || !teacherForm.birthDate) {
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.showAlert('Пожалуйста, заполните все поля');
+        } else {
+          alert('Пожалуйста, заполните все поля');
+        }
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const formData = selectedRole === 'student' ? studentForm : teacherForm;
+      
+      // В реальном приложении здесь будет запрос к API
+      const mockUser = {
+        id: telegramUser?.id.toString() || Date.now().toString(),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        middleName: selectedRole === 'teacher' ? teacherForm.middleName.trim() : undefined,
+        birthDate: selectedRole === 'student' ? studentForm.birthDate : teacherForm.birthDate,
+        role: selectedRole,
+        telegramId: telegramUser?.id.toString(),
+      };
+
+      // Моковый токен
+      const mockToken = 'mock-jwt-token-' + Date.now();
+      
+      login(mockUser, mockToken);
+      
+      // Навигация в зависимости от роли
+      if (selectedRole === 'teacher') {
+        navigate('/teacher/dashboard');
+      } else {
+        navigate('/student/dashboard');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert('Ошибка при входе. Попробуйте снова.');
+      } else {
+        alert('Ошибка при входе. Попробуйте снова.');
+      }
+    } finally {
+      setIsLoading(false);
+      handleCloseForm();
+    }
+  };
+
+  return (
+    <Page className={styles.page}>
+      <Navbar 
+        title="Вход в систему"
+        className={styles.navbar}
+      />
+      
+      <div className={styles.content}>
+        <div className={styles.loginCard}>
+          <div className={styles.logoContainer}>
+            <img src={logo} alt="Logo" className={styles.logo} />
+          </div>
+          <h1 className={styles.loginTitle}>Добро пожаловать!</h1>
+          <p className={styles.loginSubtitle}>
+            Выберите роль для входа в систему
+          </p>
+
+          {isTelegram && telegramUser && (
+            <div className={styles.userInfo}>
+              <p className={styles.userInfoText}>
+                Привет, <strong>{telegramUser.firstName}</strong>!
+              </p>
+              <p className={styles.userInfoHint}>
+                Войдите как учитель или студент
+              </p>
+            </div>
+          )}
+
+          <div className={styles.buttonsContainer}>
+            <button
+              className={`${styles.loginButton} ${styles.loginButtonPrimary}`}
+              onClick={() => handleRoleSelect('teacher')}
+              disabled={isLoading || isFormOpen}
+            >
+              <AcademicCapIcon className={styles.buttonIcon} />
+              <span className={styles.buttonText}>Войти как учитель</span>
+            </button>
+            
+            <button
+              className={`${styles.loginButton} ${styles.loginButtonSecondary}`}
+              onClick={() => handleRoleSelect('student')}
+              disabled={isLoading || isFormOpen}
+            >
+              <UserIcon className={styles.buttonIcon} />
+              <span className={styles.buttonText}>Войти как студент</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Модальное окно с формой анкеты */}
+      {isFormOpen && selectedRole && (
+        <div className={styles.formModal} onClick={handleCloseForm}>
+          <div className={styles.formModalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.formModalHeader}>
+              <h2 className={styles.formModalTitle}>
+                {selectedRole === 'teacher' ? 'Анкета учителя' : 'Анкета ученика'}
+              </h2>
+              <button onClick={handleCloseForm} className={styles.formModalCloseButton}>
+                <XMarkIcon className={styles.formModalCloseIcon} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmitForm} className={styles.formContent}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Имя <span className={styles.required}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={selectedRole === 'student' ? studentForm.firstName : teacherForm.firstName}
+                  onChange={(e) => {
+                    if (selectedRole === 'student') {
+                      setStudentForm(prev => ({ ...prev, firstName: e.target.value }));
+                    } else {
+                      setTeacherForm(prev => ({ ...prev, firstName: e.target.value }));
+                    }
+                  }}
+                  className={styles.formInput}
+                  placeholder="Введите имя"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Фамилия <span className={styles.required}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={selectedRole === 'student' ? studentForm.lastName : teacherForm.lastName}
+                  onChange={(e) => {
+                    if (selectedRole === 'student') {
+                      setStudentForm(prev => ({ ...prev, lastName: e.target.value }));
+                    } else {
+                      setTeacherForm(prev => ({ ...prev, lastName: e.target.value }));
+                    }
+                  }}
+                  className={styles.formInput}
+                  placeholder="Введите фамилию"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              {selectedRole === 'teacher' && (
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    Отчество <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={teacherForm.middleName}
+                    onChange={(e) => setTeacherForm(prev => ({ ...prev, middleName: e.target.value }))}
+                    className={styles.formInput}
+                    placeholder="Введите отчество"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Дата рождения <span className={styles.required}>*</span>
+                </label>
+                <input
+                  type="date"
+                  value={selectedRole === 'student' ? studentForm.birthDate : teacherForm.birthDate}
+                  onChange={(e) => {
+                    if (selectedRole === 'student') {
+                      setStudentForm(prev => ({ ...prev, birthDate: e.target.value }));
+                    } else {
+                      setTeacherForm(prev => ({ ...prev, birthDate: e.target.value }));
+                    }
+                  }}
+                  className={styles.formInput}
+                  required
+                  disabled={isLoading}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  onClick={handleCloseForm}
+                  className={styles.formCancelButton}
+                  disabled={isLoading}
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  className={styles.formSubmitButton}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Вход...' : 'Войти'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </Page>
+  );
+};
+
+export default LoginPage;
+

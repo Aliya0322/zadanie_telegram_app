@@ -1,0 +1,832 @@
+/* src/features/Groups/Dashboard.module.css */
+
+.page {
+  background-color: #f7f7f7;
+  min-height: 100vh;
+}
+
+.navbar {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.navbarTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbarLogo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Дополнительные стили для StudentDashboardPage */
+.nextClassSection {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.nextClassTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nextClassContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nextClassDate {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.blueIcon {
+  color: #3b82f6;
+}
+
+.grayIcon {
+  color: #6b7280;
+}
+
+.greenText {
+  color: #10b981;
+}
+
+.loadingText {
+  text-align: center;
+  padding: 20px;
+}
+
+.emptyText {
+  text-align: center;
+  padding: 20px;
+  color: #6b7280;
+}
+
+.clickableCard {
+  cursor: pointer;
+}
+
+.homeworkIcon {
+  font-size: 24px;
+  color: #3b82f6;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flexInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.columnMeta {
+  margin-top: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.descriptionText {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.deadlineBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.deadlineText {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.smallClockIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.modalFormPadding {
+  padding: 20px;
+}
+
+.modalDescriptionBox {
+  padding: 12px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #1f2937;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.modalDateBox {
+  padding: 12px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #1f2937;
+}
+
+.fileIconBlue {
+  width: 18px;
+  height: 18px;
+  color: #3b82f6;
+}
+
+.clickableFile {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.requiredStar {
+  color: #ef4444;
+}
+
+/* Стиль для обязательных полей (звездочка) */
+
+.flexContent {
+  flex: 1;
+}
+
+.smallStatusText {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.fileHintMargin {
+  margin-top: 4px;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #1f2937;
+  transition: opacity 0.2s;
+}
+
+.navButton:hover {
+  opacity: 0.7;
+}
+
+.navButton:active {
+  opacity: 0.5;
+}
+
+.navIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.content {
+  padding: 16px;
+  padding-bottom: 100px; /* Space for bottom button */
+}
+
+/* Приветствие */
+.greetingSection {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+
+.greetingSectionWithButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+
+.greetingEmoji {
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.greetingText {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+/* Секция "Сегодняшние занятия" */
+.scheduleBlock {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.scheduleHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.flameIcon {
+  font-size: 18px;
+  margin-right: 6px;
+}
+
+.scheduleTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scheduleList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scheduleItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.clockIcon {
+  width: 20px;
+  height: 20px;
+  color: #6b7280;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.scheduleItemContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 15px;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.scheduleTime {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.scheduleSeparator {
+  margin: 0 4px;
+  color: #6b7280;
+}
+
+.scheduleSubject {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.scheduleGroup {
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+/* Карточка для состояний загрузки и пустых списков */
+.currentHomeworkCard {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+}
+
+.currentHomeworkText {
+  font-size: 15px;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+/* Секция "МОИ ГРУППЫ" */
+.groupsSection {
+  margin-bottom: 24px;
+}
+
+.groupsTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #4b5563;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.groupsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.groupCard {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.groupCard:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.groupCardContent {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  gap: 12px;
+}
+
+.groupIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.groupInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.groupName {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.groupMeta {
+  font-size: 13px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.groupStudents {
+  color: #6b7280;
+}
+
+.groupSeparator {
+  margin: 0 4px;
+  color: #d1d5db;
+}
+
+.groupHomework {
+  color: #6b7280;
+}
+
+.groupArrow {
+  font-size: 24px;
+  color: #9ca3af;
+  font-weight: 300;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Кнопка создания группы */
+.createGroupButton {
+  position: fixed;
+  bottom: 20px;
+  left: 16px;
+  right: 16px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 10;
+  max-width: calc(100vw - 32px);
+  margin: 0 auto;
+}
+
+.createGroupButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+.createGroupButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Адаптивность для больших экранов */
+@media (min-width: 768px) {
+  .content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .createGroupButton {
+    max-width: 568px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .createGroupButton:hover {
+    transform: translateX(-50%) translateY(-2px);
+  }
+  
+  .createGroupButton:active {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Кнопка календаря */
+.calendarButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.calendarButton:hover {
+  background-color: #2563eb;
+}
+
+.calendarButton:active {
+  background-color: #1d4ed8;
+}
+
+.calendarButtonIcon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Модальное окно календаря */
+.calendarModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.calendarModalContent {
+  background-color: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  padding-top: 60px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.calendarMonthYearContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.calendarMonthYear {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 140px;
+  text-align: center;
+}
+
+.calendarNavButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #6b7280;
+}
+
+.calendarNavButton:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  color: #1f2937;
+}
+
+.calendarNavButton:active {
+  background-color: #e5e7eb;
+  transform: scale(0.95);
+}
+
+.calendarNavIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.calendarCloseButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s;
+  z-index: 10;
+  border-radius: 8px;
+}
+
+.calendarCloseButton:hover {
+  color: #1f2937;
+  background-color: #f3f4f6;
+}
+
+.calendarCloseIcon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Календарная сетка */
+.calendarGrid {
+  padding: 20px;
+}
+
+.calendarWeekDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.calendarWeekDays > div {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  padding: 8px 0;
+}
+
+.calendarDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendarDay {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.calendarDay:hover {
+  background-color: #f3f4f6;
+}
+
+.calendarDayEmpty {
+  cursor: default;
+  pointer-events: none;
+}
+
+.calendarDayWithClass {
+  position: relative;
+}
+
+.calendarDaySelected {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.calendarDaySelected:hover {
+  background-color: #2563eb;
+}
+
+.calendarDayDot {
+  position: absolute;
+  bottom: 4px;
+  width: 6px;
+  height: 6px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+}
+
+.calendarDaySelected .calendarDayDot {
+  background-color: white;
+}
+
+/* Расписание выбранного дня */
+.selectedDateSchedule {
+  padding: 20px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.selectedDateTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.selectedDateList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.selectedDateItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background-color: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Форма создания группы */
+.createGroupForm {
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.formInput,
+.formTextarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #1f2937;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.formInput:disabled,
+.formTextarea:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.formCancelButton,
+.formSubmitButton {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.formCancelButton {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.formCancelButton:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.formCancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.formSubmitButton {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.formSubmitButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.formSubmitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #9ca3af;
+  box-shadow: none;
+}
+
