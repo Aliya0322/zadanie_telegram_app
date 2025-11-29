@@ -7,10 +7,21 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'konsta-vendor': ['konsta'],
-          'icons-vendor': ['@heroicons/react'],
+        manualChunks(id) {
+          // Разделение на чанки по путям
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            if (id.includes('@heroicons')) {
+              return 'icons-vendor';
+            }
+            if (id.includes('konsta')) {
+              return 'konsta-vendor';
+            }
+            // Остальные node_modules в отдельный чанк
+            return 'vendor';
+          }
         },
       },
     },
