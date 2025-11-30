@@ -1,12 +1,12 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // Plugin to handle konsta package resolution issue
 // Works in both dev and build modes on Vercel
-const konstaPlugin = () => ({
+const konstaPlugin = (): Plugin => ({
   name: 'konsta-resolve',
   enforce: 'pre',
-  resolveId(id) {
+  resolveId(id: string) {
     // If Vite tries to resolve 'konsta' directly, redirect to 'konsta/react'
     if (id === 'konsta') {
       return { id: 'konsta/react', external: false }
