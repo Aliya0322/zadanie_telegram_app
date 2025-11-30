@@ -49,16 +49,35 @@ const LoginPage: React.FC = () => {
       }
 
       // Проверяем, зарегистрирован ли пользователь через API
+      // Используем telegram_id как надежный идентификатор
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
         const webApp = window.Telegram.WebApp;
+        
+        // Получаем telegram_id из initDataUnsafe (всегда доступен)
+        const telegramId = webApp.initDataUnsafe?.user?.id;
+        
+        // Получаем initData для отправки на бэкенд (может быть в разных местах)
         const initData = (webApp as any).initData || 
                          (webApp as any).initDataRaw ||
-                         new URLSearchParams(window.location.search).get('tgWebAppData');
+                         new URLSearchParams(window.location.search).get('tgWebAppData') ||
+                         new URLSearchParams(window.location.search).get('_tgWebAppData');
         
-        if (initData) {
+        // Логирование для отладки
+        if (import.meta.env.DEV) {
+          console.log('[LoginPage] Checking existing auth...', {
+            telegramId: telegramId || 'not found',
+            hasInitData: !!initData,
+            platform: webApp.platform,
+          });
+        }
+        
+        // Если есть initData или telegram_id, пытаемся проверить авторизацию
+        if (initData || telegramId) {
           try {
             // Проверяем, зарегистрирован ли пользователь
+            // API использует initData из заголовка X-Telegram-Init-Data
             const currentUser = await getCurrentUser();
+            
             // Если пользователь найден, автоматически логиним
             const contextUser = {
               id: currentUser.id,
@@ -70,7 +89,13 @@ const LoginPage: React.FC = () => {
               telegramId: currentUser.telegramId,
               timezone: currentUser.timezone,
             };
+            
             login(contextUser, 'telegram-auth');
+            
+            if (import.meta.env.DEV) {
+              console.log('[LoginPage] User authenticated, redirecting to dashboard');
+            }
+            
             // Перенаправляем на dashboard
             if (currentUser.role === 'teacher') {
               navigate('/teacher/dashboard', { replace: true });
@@ -80,7 +105,13 @@ const LoginPage: React.FC = () => {
             return;
           } catch (error) {
             // Пользователь не зарегистрирован - показываем форму регистрации
-            console.log('User not registered, showing registration form');
+            if (import.meta.env.DEV) {
+              console.log('[LoginPage] User not registered, showing registration form:', error);
+            }
+          }
+        } else {
+          if (import.meta.env.DEV) {
+            console.warn('[LoginPage] No initData and no telegram_id found');
           }
         }
       }

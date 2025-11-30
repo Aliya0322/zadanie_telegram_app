@@ -45,17 +45,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Проверяем авторизацию только через API с Telegram initData
+      // Проверяем авторизацию через API с Telegram initData
+      // Используем telegram_id из initDataUnsafe как надежный идентификатор
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
         const webApp = window.Telegram.WebApp;
+        
+        // Получаем telegram_id из initDataUnsafe (всегда доступен в Telegram WebApp)
+        const telegramId = webApp.initDataUnsafe?.user?.id;
+        
+        // Получаем initData для отправки на бэкенд (может быть в разных местах)
         const initData = (webApp as any).initData || 
                          (webApp as any).initDataRaw ||
-                         new URLSearchParams(window.location.search).get('tgWebAppData');
+                         new URLSearchParams(window.location.search).get('tgWebAppData') ||
+                         new URLSearchParams(window.location.search).get('_tgWebAppData');
         
-        if (initData) {
+        // Логирование для отладки
+        if (import.meta.env.DEV) {
+          console.log('[AuthContext] Checking authentication...', {
+            hasTelegramWebApp: true,
+            telegramId: telegramId || 'not found',
+            hasInitData: !!initData,
+            platform: webApp.platform,
+            version: webApp.version,
+          });
+        }
+        
+        // Если есть initData или telegram_id, пытаемся авторизоваться
+        if (initData || telegramId) {
           try {
             // Пытаемся получить информацию о пользователе через API
+            // API использует initData из заголовка X-Telegram-Init-Data
             const currentUser = await getCurrentUser();
+            
             // Если пользователь найден, автоматически логиним
             const contextUser = {
               id: currentUser.id,
@@ -67,11 +88,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               telegramId: currentUser.telegramId,
               timezone: currentUser.timezone,
             };
+            
             setUser(contextUser);
+            
+            if (import.meta.env.DEV) {
+              console.log('[AuthContext] User authenticated:', {
+                userId: contextUser.id,
+                telegramId: contextUser.telegramId,
+                role: contextUser.role,
+              });
+            }
           } catch (error) {
-            // Пользователь не зарегистрирован или ошибка - оставляем null
-            console.log('User not authenticated or not registered yet');
+            // Пользователь не зарегистрирован или ошибка
+            if (import.meta.env.DEV) {
+              console.log('[AuthContext] User not authenticated or not registered yet:', error);
+            }
           }
+        } else {
+          if (import.meta.env.DEV) {
+            console.warn('[AuthContext] No initData and no telegram_id found');
+          }
+        }
+      } else {
+        if (import.meta.env.DEV) {
+          console.log('[AuthContext] Telegram WebApp not available');
         }
       }
       

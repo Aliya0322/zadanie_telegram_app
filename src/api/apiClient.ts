@@ -35,23 +35,71 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
+// Функция для получения initData из всех возможных источников
+const getTelegramInitData = (): string | null => {
+  if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
+    return null;
+  }
+
+  const webApp = window.Telegram.WebApp;
+  
+  // Список возможных источников initData (в порядке приоритета)
+  const sources = [
+    // 1. Основной способ - webApp.initData
+    () => (webApp as any).initData,
+    // 2. Альтернативный способ - webApp.initDataRaw
+    () => (webApp as any).initDataRaw,
+    // 3. URL параметр tgWebAppData
+    () => new URLSearchParams(window.location.search).get('tgWebAppData'),
+    // 4. URL параметр _tgWebAppData (с подчеркиванием)
+    () => new URLSearchParams(window.location.search).get('_tgWebAppData'),
+    // 5. Проверяем hash часть URL (может содержать initData)
+    () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        return hashParams.get('tgWebAppData') || hashParams.get('_tgWebAppData');
+      }
+      return null;
+    },
+  ];
+
+  // Пробуем каждый источник
+  for (const getSource of sources) {
+    try {
+      const data = getSource();
+      if (data && typeof data === 'string' && data.trim().length > 0) {
+        return data;
+      }
+    } catch (error) {
+      // Пропускаем ошибки и пробуем следующий источник
+      continue;
+    }
+  }
+
+  return null;
+};
+
 // Добавляем Interceptor для передачи initData (авторизации TG)
 apiClient.interceptors.request.use(
   (config) => {
-    // Внимание: window.Telegram.WebApp должен быть доступен
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const webApp = window.Telegram.WebApp;
-      // initData может быть доступен через initData или через query string
-      // В некоторых версиях SDK это свойство может называться по-другому
-      const initData = (webApp as any).initData || 
-                       (webApp as any).initDataRaw ||
-                       new URLSearchParams(window.location.search).get('tgWebAppData');
+    // Получаем initData из всех возможных источников
+    const initData = getTelegramInitData();
 
-      if (initData) {
-        // Ваш бэкенд должен проверить этот initData для авторизации
-        config.headers['X-Telegram-Init-Data'] = initData;
-      } else {
-        console.warn('Telegram initData not found. Request may fail authentication.');
+    if (initData) {
+      // Бэкенд должен проверить этот initData для авторизации
+      config.headers['X-Telegram-Init-Data'] = initData;
+    } else {
+      // Логируем предупреждение только в development
+      if (import.meta.env.DEV) {
+        console.warn('[API Client] Telegram initData not found. Request may fail authentication.');
+        console.warn('[API Client] Available Telegram WebApp:', !!window.Telegram?.WebApp);
+        if (window.Telegram?.WebApp) {
+          const webApp = window.Telegram.WebApp;
+          console.warn('[API Client] initDataUnsafe available:', !!webApp.initDataUnsafe);
+          console.warn('[API Client] Platform:', webApp.platform);
+          console.warn('[API Client] Version:', webApp.version);
+        }
       }
     }
 
