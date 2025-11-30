@@ -39,6 +39,55 @@ export const apiClient = axios.create({
 // Это важно для мобильных устройств, где initData может быть доступен только один раз
 let cachedInitData: string | null = null;
 
+// Функция для инициализации кэша при загрузке модуля
+const initializeInitDataCache = () => {
+  if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
+    return;
+  }
+
+  const webApp = window.Telegram.WebApp;
+  
+  // Список источников для инициализации
+  const initSources = [
+    () => (webApp as any).initData,
+    () => (webApp as any).initDataRaw,
+    () => new URLSearchParams(window.location.search).get('tgWebAppData'),
+    () => new URLSearchParams(window.location.search).get('_tgWebAppData'),
+  ];
+
+  for (const getSource of initSources) {
+    try {
+      const data = getSource();
+      if (data && typeof data === 'string' && data.trim().length > 0) {
+        cachedInitData = data;
+        console.log('[API] InitData cache initialized on module load');
+        return;
+      }
+    } catch {
+      continue;
+    }
+  }
+};
+
+// Пытаемся инициализировать кэш сразу, если доступно
+if (typeof window !== 'undefined') {
+  // Пробуем сразу, если SDK уже загружен
+  if (window.Telegram?.WebApp) {
+    initializeInitDataCache();
+  } else {
+    // Иначе пробуем через небольшую задержку и еще раз через большую задержку
+    setTimeout(() => {
+      initializeInitDataCache();
+    }, 100);
+    
+    setTimeout(() => {
+      if (!cachedInitData) {
+        initializeInitDataCache();
+      }
+    }, 1000);
+  }
+}
+
 // Функция для получения initData из всех возможных источников
 const getTelegramInitData = (): string | null => {
   // Если есть кэш и он не пустой, возвращаем его сразу
@@ -167,7 +216,27 @@ apiClient.interceptors.request.use(
         console.error('[API] Request will likely fail:', {
           url: config.url,
           method: config.method,
+          cachedInitData: cachedInitData ? 'exists' : 'not cached',
         });
+        
+        // Пытаемся инициализировать кэш еще раз прямо перед запросом
+        initializeInitDataCache();
+        
+        // Если кэш обновился, пробуем использовать его
+        if (cachedInitData) {
+          console.log('[API] ✅ InitData found after retry, adding to request');
+          config.headers['X-Telegram-Init-Data'] = cachedInitData;
+        } else {
+          console.error('[API] ❌ InitData still not found after retry');
+          console.error('[API] Detailed debug info:', {
+            hasTelegramWebApp: !!window.Telegram?.WebApp,
+            platform: window.Telegram?.WebApp?.platform,
+            version: window.Telegram?.WebApp?.version,
+            url: window.location.href,
+            search: window.location.search,
+            hash: window.location.hash,
+          });
+        }
       }
       
       // Детальное логирование для development
