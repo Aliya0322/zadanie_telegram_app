@@ -18,23 +18,43 @@
 }
 
 .navbar :global(.navbar-left) {
-  flex: 0 0 60px;
-  min-width: 60px;
+  flex: 0 0 auto;
+  min-width: auto;
 }
 
 .navbar :global(.navbar-title) {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
+  position: static;
+  transform: none;
+  text-align: left;
   width: auto;
   margin: 0;
+  margin-left: 16px;
   pointer-events: none;
+  flex: 1;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+@media (max-width: 480px) {
+  .navbar :global(.navbar-title) {
+    font-size: 16px;
+    margin-left: 12px;
+  }
+  
+  .navbar :global(.navbar-right) {
+    margin-right: 12px;
+  }
+  
+  .greetingSection {
+    padding-left: 12px;
+  }
 }
 
 .navbar :global(.navbar-right) {
   flex: 0 0 auto;
   margin-left: auto;
+  margin-right: 16px;
 }
 
 .navbarTitle {
@@ -257,6 +277,7 @@
   font-size: 15px;
   font-weight: 500;
   transition: opacity 0.2s;
+  white-space: nowrap;
 }
 
 .logoutButton:hover {
@@ -290,6 +311,7 @@
   justify-content: flex-start;
   margin-bottom: 12px;
   padding: 0 4px;
+  padding-left: 16px;
 }
 
 .greetingSectionWithButton {
