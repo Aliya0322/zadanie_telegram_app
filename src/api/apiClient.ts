@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Настройка базового URL для API
-// ЗАМЕНИТЕ НА АДРЕС ВАШЕГО БЭКЕНДА
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.yourmentordesk.com/v1';
+// Бэкенд использует префикс /api/v1
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
 // Создание экземпляра Axios с базовой конфигурацией
 export const apiClient = axios.create({

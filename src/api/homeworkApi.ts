@@ -22,11 +22,19 @@ export interface HomeworkSubmission {
   feedback?: string;
 }
 
-export interface CreateHomeworkDto {
-  title: string;
+// DTO для отправки на бэкенд (соответствует API бэкенда)
+export interface CreateHomeworkRequestDto {
+  group_id: string;
   description: string;
-  groupId: string;
-  dueDate: string;
+  deadline: string;
+}
+
+// DTO для использования на фронтенде (удобнее работать с camelCase)
+export interface CreateHomeworkDto {
+  title?: string; // Не используется бэкендом, только для фронтенда
+  description: string;
+  groupId: string; // Конвертируется в group_id при отправке
+  dueDate: string; // Конвертируется в deadline при отправке
 }
 
 export interface SubmitHomeworkDto {
@@ -46,8 +54,15 @@ export const getHomeworkById = async (id: string): Promise<Homework> => {
 };
 
 // Создать новое домашнее задание
+// Бэкенд ожидает: group_id, description, deadline
 export const createHomework = async (data: CreateHomeworkDto): Promise<Homework> => {
-  const response = await apiClient.post<Homework>('/homework', data);
+  // Конвертируем фронтенд формат в формат бэкенда
+  const requestData: CreateHomeworkRequestDto = {
+    group_id: data.groupId,
+    description: data.description,
+    deadline: data.dueDate,
+  };
+  const response = await apiClient.post<Homework>('/homework', requestData);
   return response.data;
 };
 
@@ -62,9 +77,11 @@ export const deleteHomework = async (id: string): Promise<void> => {
   await apiClient.delete(`/homework/${id}`);
 };
 
-// Отправить выполненное задание (для студентов)
-export const submitHomework = async (homeworkId: string, data: SubmitHomeworkDto): Promise<HomeworkSubmission> => {
-  const response = await apiClient.post<HomeworkSubmission>(`/homework/${homeworkId}/submit`, data);
+// Отметить задание как выполненное (для студентов)
+// Бэкенд использует эндпоинт /homework/{homework_id}/complete
+export const submitHomework = async (homeworkId: string, data?: SubmitHomeworkDto): Promise<HomeworkSubmission> => {
+  // Бэкенд может не требовать body, или требовать минимальные данные
+  const response = await apiClient.post<HomeworkSubmission>(`/homework/${homeworkId}/complete`, data || {});
   return response.data;
 };
 

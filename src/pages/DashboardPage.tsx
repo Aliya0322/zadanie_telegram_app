@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Page, Navbar, Block } from 'konsta/react';
 import { ArrowLeftIcon, EllipsisVerticalIcon, ClockIcon, CalendarIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
-import { createGroup } from '../api/groupsApi';
+import { createGroup, getGroups } from '../api/groupsApi';
 import type { CreateGroupDto } from '../api/groupsApi';
+import { getDashboard } from '../api/userApi';
+import type { DashboardData, ScheduleItem } from '../api/userApi';
 // Импорт модульных стилей
 import styles from '../features/Groups/Dashboard.module.css';
 
@@ -54,6 +56,8 @@ const DashboardPage = () => {
   const [groupName, setGroupName] = useState('');
   const [groupMeetingLink, setGroupMeetingLink] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Получение имени пользователя из TG SDK или из контекста авторизации
   // Для учителя: имя, отчество, фамилия
@@ -125,6 +129,9 @@ const DashboardPage = () => {
       
       // Закрываем модальное окно и обновляем страницу
       handleCloseCreateGroup();
+      
+      // Обновляем данные дашборда
+      await handleGroupCreated();
       
       // Переходим на страницу новой группы
       navigate(`/groups/${newGroup.id}`);
@@ -232,8 +239,66 @@ const DashboardPage = () => {
     return `${months[calendarMonth]} ${calendarYear}`;
   };
 
+  // Загрузка данных дашборда
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getDashboard();
+        setDashboardData(data);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // В случае ошибки используем моковые данные
+        setDashboardData({
+          userRole: user?.role || 'teacher',
+          groups: mockGroups.map(g => ({
+            id: g.id,
+            name: g.name,
+            teacherId: user?.id || '',
+            students: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })),
+          schedule: [],
+          activeHomework: [],
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user]);
+
+  // Обновление списка групп после создания новой
+  const handleGroupCreated = async () => {
+    try {
+      const data = await getDashboard();
+      setDashboardData(data);
+    } catch (error) {
+      console.error('Error refreshing groups:', error);
+    }
+  };
+
   const calendarDays = generateCalendar();
   const calendarMonthYear = getCalendarMonthYear();
+  
+  // Используем данные из API или моковые данные
+  const groups = dashboardData?.groups || mockGroups.map(g => ({
+    id: g.id,
+    name: g.name,
+    teacherId: user?.id || '',
+    students: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }));
+  
+  const todaySchedule = dashboardData?.schedule || mockSchedule.map(item => ({
+    id: item.time,
+    groupId: '1',
+    groupName: item.group,
+    startTime: item.time,
+  }));
 
   return (
     <Page className={styles.page}>
@@ -266,60 +331,73 @@ const DashboardPage = () => {
         </div>
 
         {/* Сегодняшние занятия */}
-        <Block className={styles.scheduleBlock}>
-          <div className={styles.scheduleHeader}>
-            <span className={styles.scheduleTitle}>
-              СЕГОДНЯ: {mockSchedule.length} занятия
-            </span>
-          </div>
-          
-          <div className={styles.scheduleList}>
-          {mockSchedule.map((item, index) => (
-              <div key={index} className={styles.scheduleItem}>
-                <ClockIcon className={styles.clockIcon} />
-                <div className={styles.scheduleItemContent}>
-                  <span className={styles.scheduleTime}>{item.time}</span>
-                  <span className={styles.scheduleSeparator}> - </span>
-                  <span className={styles.scheduleSubject}>{item.title}</span>
-                  <span className={styles.scheduleGroup}>({item.group})</span>
+        {!isLoading && todaySchedule.length > 0 && (
+          <Block className={styles.scheduleBlock}>
+            <div className={styles.scheduleHeader}>
+              <span className={styles.scheduleTitle}>
+                СЕГОДНЯ: {todaySchedule.length} {todaySchedule.length === 1 ? 'занятие' : todaySchedule.length < 5 ? 'занятия' : 'занятий'}
+              </span>
+            </div>
+            
+            <div className={styles.scheduleList}>
+            {todaySchedule.map((item) => (
+                <div key={item.id} className={styles.scheduleItem}>
+                  <ClockIcon className={styles.clockIcon} />
+                  <div className={styles.scheduleItemContent}>
+                    <span className={styles.scheduleTime}>{item.startTime}</span>
+                    <span className={styles.scheduleSeparator}> - </span>
+                    <span className={styles.scheduleSubject}>{item.groupName}</span>
+                  </div>
                 </div>
-              </div>
-          ))}
-          </div>
-      </Block>
+            ))}
+            </div>
+        </Block>
+        )}
 
         {/* Мои группы */}
         <div className={styles.groupsSection}>
           <h2 className={styles.groupsTitle}>МОИ ГРУППЫ</h2>
           
           <div className={styles.groupsList}>
-          {mockGroups.map((group) => (
-              <div 
-              key={group.id}
-                className={styles.groupCard}
-              onClick={() => handleGroupClick(group.id)}
-              >
-                <div className={styles.groupCardContent}>
-                  <div className={styles.groupInfo}>
-                    <div className={styles.groupName}>{group.name}</div>
-                    <div className={styles.groupMeta}>
-                      <span className={styles.groupStudents}>
-                        {group.count} {group.count === 1 ? 'ученик' : group.count < 5 ? 'ученика' : 'учеников'}
-                      </span>
-                      {group.homework && (
-                        <>
-                          <span className={styles.groupSeparator}> | </span>
-                          <span className={styles.groupHomework}>
-                            ДЗ: {group.homework}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <span className={styles.groupArrow}>›</span>
-                </div>
+          {isLoading ? (
+            <div className={styles.groupCard}>
+              <div className={styles.groupCardContent}>
+                <div className={styles.groupName}>Загрузка...</div>
               </div>
-            ))}
+            </div>
+          ) : (
+            groups.map((group) => {
+              const studentCount = group.students?.length || 0;
+              const hasHomework = dashboardData?.activeHomework?.some(hw => hw.groupId === group.id) || false;
+              return (
+                <div 
+                  key={group.id}
+                  className={styles.groupCard}
+                  onClick={() => handleGroupClick(group.id)}
+                >
+                  <div className={styles.groupCardContent}>
+                    <div className={styles.groupInfo}>
+                      <div className={styles.groupName}>{group.name}</div>
+                      <div className={styles.groupMeta}>
+                        <span className={styles.groupStudents}>
+                          {studentCount} {studentCount === 1 ? 'ученик' : studentCount < 5 ? 'ученика' : 'учеников'}
+                        </span>
+                        {hasHomework && (
+                          <>
+                            <span className={styles.groupSeparator}> | </span>
+                            <span className={styles.groupHomework}>
+                              ДЗ: Активно
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <span className={styles.groupArrow}>›</span>
+                  </div>
+                </div>
+              );
+            })
+          )}
           </div>
         </div>
 

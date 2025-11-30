@@ -5,6 +5,7 @@ import { AcademicCapIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outlin
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import { timezones, getDefaultTimezone } from '../utils/timezones';
+import { login as authLogin, updateRole } from '../api/authApi';
 import logo from '../assets/images/logo.png';
 import styles from './Login.module.css';
 
@@ -94,22 +95,41 @@ const LoginPage: React.FC = () => {
     try {
       const formData = selectedRole === 'student' ? studentForm : teacherForm;
       
-      // В реальном приложении здесь будет запрос к API
-      const mockUser = {
-        id: telegramUser?.id.toString() || Date.now().toString(),
+      // Сначала делаем логин/регистрацию через /auth/login
+      // initData будет автоматически добавлен в заголовки через interceptor
+      let loginResponse;
+      try {
+        loginResponse = await authLogin();
+      } catch (loginError) {
+        console.error('Login error:', loginError);
+        // Если пользователь уже залогинен, продолжаем
+        throw loginError;
+      }
+
+      // Затем обновляем роль и данные пользователя
+      const updateData = {
+        role: selectedRole,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        middleName: selectedRole === 'teacher' ? teacherForm.middleName.trim() : undefined,
-        birthDate: selectedRole === 'student' ? studentForm.birthDate : teacherForm.birthDate,
-        timezone: selectedRole === 'student' ? studentForm.timezone : teacherForm.timezone,
-        role: selectedRole,
-        telegramId: telegramUser?.id.toString(),
+        birthDate: formData.birthDate,
+        timezone: formData.timezone,
+        ...(selectedRole === 'teacher' && { middleName: teacherForm.middleName.trim() }),
       };
 
-      // Моковый токен
-      const mockToken = 'mock-jwt-token-' + Date.now();
+      const updatedUser = await updateRole(updateData);
       
-      login(mockUser, mockToken);
+      // Сохраняем пользователя в контекст (преобразуем в формат AuthContext)
+      const contextUser = {
+        id: updatedUser.id,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        middleName: updatedUser.middleName,
+        birthDate: updatedUser.birthDate,
+        role: updatedUser.role,
+        telegramId: updatedUser.telegramId,
+        timezone: updatedUser.timezone,
+      };
+      login(contextUser, loginResponse.token || '');
       
       // Навигация в зависимости от роли
       if (selectedRole === 'teacher') {
@@ -119,10 +139,14 @@ const LoginPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Ошибка при входе. Попробуйте снова.';
+      
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert('Ошибка при входе. Попробуйте снова.');
+        window.Telegram.WebApp.showAlert(errorMessage);
       } else {
-        alert('Ошибка при входе. Попробуйте снова.');
+        alert(errorMessage);
       }
     } finally {
       setIsLoading(false);
