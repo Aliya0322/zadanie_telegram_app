@@ -4,10 +4,10 @@ import { Page, Navbar, Block } from 'konsta/react';
 import { ArrowLeftIcon, EllipsisVerticalIcon, ClockIcon, CalendarIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
-import { createGroup, getGroups } from '../api/groupsApi';
+import { createGroup } from '../api/groupsApi';
 import type { CreateGroupDto } from '../api/groupsApi';
 import { getDashboard } from '../api/userApi';
-import type { DashboardData, ScheduleItem } from '../api/userApi';
+import type { DashboardData } from '../api/userApi';
 // Импорт модульных стилей
 import styles from '../features/Groups/Dashboard.module.css';
 
@@ -97,6 +97,16 @@ const DashboardPage = () => {
     setIsCreateGroupOpen(false);
     setGroupName('');
     setGroupMeetingLink('');
+  };
+
+  // Обновление списка групп после создания новой
+  const handleGroupCreated = async () => {
+    try {
+      const data = await getDashboard();
+      setDashboardData(data);
+    } catch (error) {
+      console.error('Error refreshing groups:', error);
+    }
   };
 
   const handleSubmitCreateGroup = async (e: React.FormEvent) => {
@@ -269,16 +279,6 @@ const DashboardPage = () => {
 
     fetchDashboardData();
   }, [user]);
-
-  // Обновление списка групп после создания новой
-  const handleGroupCreated = async () => {
-    try {
-      const data = await getDashboard();
-      setDashboardData(data);
-    } catch (error) {
-      console.error('Error refreshing groups:', error);
-    }
-  };
 
   const calendarDays = generateCalendar();
   const calendarMonthYear = getCalendarMonthYear();

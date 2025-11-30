@@ -26,7 +26,7 @@ const NewHomeworkForm: React.FC<NewHomeworkFormProps> = ({
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof CreateHomeworkDto, string>> = {};
 
-    if (!formData.title.trim()) {
+    if (!formData.title?.trim()) {
       newErrors.title = 'Название обязательно';
     }
 
@@ -90,7 +90,7 @@ const NewHomeworkForm: React.FC<NewHomeworkFormProps> = ({
             type="text"
             id="title"
             name="title"
-            value={formData.title}
+            value={formData.title || ''}
             onChange={handleChange}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.title ? 'border-red-500' : 'border-gray-300'
