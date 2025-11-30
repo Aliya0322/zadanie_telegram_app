@@ -147,8 +147,12 @@ const DashboardPage = () => {
       } else if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error?.message) {
-        if (error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
-          errorMessage = 'Не удалось подключиться к серверу. Проверьте, что бэкенд запущен.';
+        if (error.message === 'Network Error' && !error?.response) {
+          // CORS ошибка или проблема с подключением
+          const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+          errorMessage = `Не удалось подключиться к серверу (${apiUrl}).\n\nВозможные причины:\n1. Проблема с CORS - проверьте настройки бэкенда\n2. Сервер недоступен\n3. Проблема с SSL сертификатом\n\nПроверьте консоль браузера для деталей.`;
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('Network Error')) {
+          errorMessage = 'Не удалось подключиться к серверу. Проверьте настройки подключения.';
         } else {
           errorMessage = `Ошибка: ${error.message}`;
         }

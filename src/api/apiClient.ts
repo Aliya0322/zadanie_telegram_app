@@ -4,6 +4,12 @@ import axios from 'axios';
 // Бэкенд использует префикс /api/v1
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
+// Логирование URL для отладки (только в development)
+if (import.meta.env.DEV) {
+  console.log('[API Config] Base URL:', API_BASE_URL);
+  console.log('[API Config] VITE_API_BASE_URL from env:', import.meta.env.VITE_API_BASE_URL);
+}
+
 // Создание экземпляра Axios с базовой конфигурацией
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -62,11 +68,34 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Логирование ошибок для отладки
+    if (import.meta.env.DEV) {
+      console.error('[API Error]', {
+        url: error.config?.url,
+        method: error.config?.method,
+        fullURL: error.config?.baseURL + error.config?.url,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        code: error.code,
+      });
+      
+      // Специальная обработка CORS ошибок
+      if (error.message === 'Network Error' && !error.response) {
+        console.error('[CORS Error] Возможна проблема с CORS или сервер недоступен');
+        console.error('Попытка подключения к:', error.config?.baseURL + error.config?.url);
+      }
+    }
+
     if (error.response?.status === 401) {
       // Обработка неавторизованного доступа
       localStorage.removeItem('authToken');
-      window.location.href = '/login';
+      localStorage.removeItem('user');
+      // Не перенаправляем автоматически, если это не критично
+      // window.location.href = '/login';
     }
+    
     return Promise.reject(error);
   }
 );
