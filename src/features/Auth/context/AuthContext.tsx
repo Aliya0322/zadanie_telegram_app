@@ -86,9 +86,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // если он доступен в любом из источников (webApp.initData, URL параметры и т.д.)
             const currentUser = await getCurrentUser();
             
+            // Используем telegramId из initDataUnsafe, если API не вернул его
+            const finalTelegramId = currentUser.telegramId || telegramId?.toString();
+            
             console.log('[Auth] ✅ API call successful, user found:', {
               userId: currentUser.id,
-              telegramId: currentUser.telegramId,
+              telegramIdFromAPI: currentUser.telegramId,
+              telegramIdFromInitData: telegramId,
+              finalTelegramId: finalTelegramId,
               role: currentUser.role,
             });
             
@@ -100,7 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               middleName: currentUser.middleName,
               birthDate: currentUser.birthDate,
               role: currentUser.role,
-              telegramId: currentUser.telegramId,
+              telegramId: finalTelegramId, // Используем telegramId из initDataUnsafe если API не вернул
               timezone: currentUser.timezone,
             };
             

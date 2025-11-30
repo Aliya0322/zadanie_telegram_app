@@ -73,6 +73,9 @@ const LoginPage: React.FC = () => {
             // apiClient автоматически добавит initData в заголовок X-Telegram-Init-Data
             const currentUser = await getCurrentUser();
             
+            // Используем telegramId из initDataUnsafe, если API не вернул его
+            const finalTelegramId = currentUser.telegramId || telegramId?.toString();
+            
             // Если пользователь найден, автоматически логиним
             const contextUser = {
               id: currentUser.id,
@@ -81,7 +84,7 @@ const LoginPage: React.FC = () => {
               middleName: currentUser.middleName,
               birthDate: currentUser.birthDate,
               role: currentUser.role,
-              telegramId: currentUser.telegramId,
+              telegramId: finalTelegramId, // Используем telegramId из initDataUnsafe если API не вернул
               timezone: currentUser.timezone,
             };
             
