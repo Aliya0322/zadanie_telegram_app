@@ -7,8 +7,27 @@
     <title>Telegram App</title>
     <!-- Preconnect для внешних ресурсов -->
     <link rel="preconnect" href="https://telegram.org" />
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Telegram WebApp SDK - загружается только в контексте Telegram -->
+    <script>
+      // Определяем, запущено ли приложение в Telegram
+      const isTelegram = window.location.search.includes('tgWebAppStartParam') || 
+                         window.location.search.includes('tgWebAppData') ||
+                         document.referrer.includes('telegram.org') ||
+                         window.navigator.userAgent.includes('Telegram');
+      
+      if (isTelegram || window.Telegram?.WebApp) {
+        // Загружаем SDK только если это Telegram
+        const script = document.createElement('script');
+        script.src = 'https://telegram.org/js/telegram-web-app.js';
+        script.async = true;
+        script.onerror = function() {
+          console.warn('Не удалось загрузить Telegram WebApp SDK. Работа в режиме разработки.');
+        };
+        document.head.appendChild(script);
+      } else {
+        console.log('Приложение запущено вне Telegram. Telegram WebApp SDK не загружается.');
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

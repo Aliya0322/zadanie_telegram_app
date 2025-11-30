@@ -114,33 +114,62 @@ export const useTelegram = () => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Проверяем, доступен ли Telegram WebApp SDK
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const webApp = window.Telegram.WebApp;
-      
-      // Инициализируем приложение
-      webApp.ready();
-      webApp.expand();
+    // Функция инициализации Telegram WebApp
+    const initTelegram = () => {
+      // Проверяем, доступен ли Telegram WebApp SDK
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        try {
+          const webApp = window.Telegram.WebApp;
+          
+          // Инициализируем приложение
+          webApp.ready();
+          webApp.expand();
 
-      setTelegram(window.Telegram);
-      
-      // Получаем данные пользователя
-      const initData = webApp.initDataUnsafe;
-      if (initData.user) {
-        setUser({
-          id: initData.user.id,
-          firstName: initData.user.first_name,
-          lastName: initData.user.last_name,
-          username: initData.user.username,
-          languageCode: initData.user.language_code,
-        });
+          setTelegram(window.Telegram);
+          
+          // Получаем данные пользователя
+          const initData = webApp.initDataUnsafe;
+          if (initData.user) {
+            setUser({
+              id: initData.user.id,
+              firstName: initData.user.first_name,
+              lastName: initData.user.last_name,
+              username: initData.user.username,
+              languageCode: initData.user.language_code,
+            });
+          }
+
+          setIsReady(true);
+        } catch (error) {
+          console.warn('Ошибка при инициализации Telegram WebApp:', error);
+          setIsReady(true);
+        }
+      } else {
+        // Для разработки вне Telegram
+        console.log('Telegram WebApp SDK не найден. Работа в режиме разработки.');
+        setIsReady(true);
       }
+    };
 
-      setIsReady(true);
+    // Если SDK уже загружен - инициализируем сразу
+    if (window.Telegram?.WebApp) {
+      initTelegram();
     } else {
-      // Для разработки вне Telegram
-      console.warn('Telegram WebApp SDK не найден. Работа в режиме разработки.');
-      setIsReady(true);
+      // Ждем загрузки SDK (максимум 2 секунды)
+      let timeoutId: ReturnType<typeof setTimeout>;
+      const checkInterval = setInterval(() => {
+        if (window.Telegram?.WebApp) {
+          clearInterval(checkInterval);
+          clearTimeout(timeoutId);
+          initTelegram();
+        }
+      }, 100);
+
+      timeoutId = setTimeout(() => {
+        clearInterval(checkInterval);
+        console.log('Telegram WebApp SDK не загрузился за 2 секунды. Работа в режиме разработки.');
+        setIsReady(true);
+      }, 2000);
     }
   }, []);
 
