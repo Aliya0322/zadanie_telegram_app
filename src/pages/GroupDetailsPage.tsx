@@ -89,10 +89,12 @@ const GroupDetailsPage = () => {
       idType: typeof id,
       idValue: id,
       currentUrl: window.location.href,
+      pathname: window.location.pathname,
     });
 
     setIsLoading(true);
     try {
+      // Убеждаемся, что ID передается правильно (может быть строкой или числом)
       const data = await getGroupById(id);
       console.log('[fetchGroup] ✅ Group fetched successfully:', data);
       setGroup(data);
@@ -100,9 +102,13 @@ const GroupDetailsPage = () => {
       console.error('[fetchGroup] ❌ Error fetching group:', {
         error: err,
         id,
+        idType: typeof id,
         status: err.response?.status,
         statusText: err.response?.statusText,
-        data: err.response?.data,
+        responseData: err.response?.data,
+        requestUrl: err.config?.url,
+        requestBaseURL: err.config?.baseURL,
+        fullRequestUrl: err.config?.baseURL ? `${err.config.baseURL}${err.config.url}` : err.config?.url,
       });
       // Не используем моковые данные - редирект на dashboard
       setGroup(null);

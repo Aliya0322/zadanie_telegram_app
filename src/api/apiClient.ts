@@ -193,8 +193,8 @@ apiClient.interceptors.request.use(
     const initData = getTelegramInitData();
 
     // Критичное логирование для важных запросов - видно в production
-    if (config.url?.includes('/auth/')) {
-      console.log('[API] Auth request:', {
+    if (config.url?.includes('/auth/') || config.url?.includes('/groups/')) {
+      console.log('[API] Request:', {
         url: config.url,
         method: config.method,
         hasInitData: !!initData,
@@ -206,12 +206,12 @@ apiClient.interceptors.request.use(
       // Бэкенд должен проверить этот initData для авторизации
       config.headers['X-Telegram-Init-Data'] = initData;
       
-      if (config.url?.includes('/auth/')) {
+      if (config.url?.includes('/auth/') || config.url?.includes('/groups/')) {
         console.log('[API] ✅ InitData found and added to request');
       }
     } else {
       // Критичное предупреждение для auth запросов - видно в production
-      if (config.url?.includes('/auth/')) {
+      if (config.url?.includes('/auth/') || config.url?.includes('/groups/')) {
         console.error('[API] ❌ Telegram initData NOT FOUND for auth request!');
         console.error('[API] Request will likely fail:', {
           url: config.url,

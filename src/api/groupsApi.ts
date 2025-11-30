@@ -51,21 +51,44 @@ export const getGroups = async (): Promise<Group[]> => {
 };
 
 // Получить группу по ID
-export const getGroupById = async (id: string): Promise<Group> => {
+// API: GET /api/v1/groups/{group_id} где group_id - integer
+export const getGroupById = async (id: string | number): Promise<Group> => {
   // Логирование для отладки
   console.log('[getGroupById] Fetching group:', {
     id,
     idType: typeof id,
     idValue: id,
-    trimmed: id?.trim(),
   });
   
-  // Убеждаемся, что ID не содержит лишних пробелов
-  const cleanId = String(id).trim();
-  const url = `/groups/${cleanId}`;
+  // Преобразуем ID в число для валидации, затем обратно в строку для URL
+  // API ожидает integer, но в URL параметры всегда строки
+  let groupId: number;
   
-  console.log('[getGroupById] Request URL:', url);
-  console.log('[getGroupById] Full URL will be:', `${apiClient.defaults.baseURL}${url}`);
+  if (typeof id === 'number') {
+    groupId = id;
+  } else {
+    const parsed = parseInt(String(id).trim(), 10);
+    if (isNaN(parsed) || parsed <= 0) {
+      throw new Error(`Invalid group ID: ${id}. Expected a positive integer.`);
+    }
+    groupId = parsed;
+  }
+  
+  // Преобразуем в строку для URL (URL параметры всегда строки)
+  const cleanId = String(groupId);
+  const url = `/groups/${cleanId}`;
+  const baseURL = apiClient.defaults.baseURL || '';
+  const fullURL = `${baseURL}${url}`;
+  
+  console.log('[getGroupById] Request details:', {
+    originalId: id,
+    validatedGroupId: groupId,
+    cleanId,
+    url,
+    baseURL,
+    fullURL,
+    expectedPath: '/api/v1/groups/{group_id}',
+  });
   
   try {
     const response = await apiClient.get<any>(url);
@@ -76,13 +99,25 @@ export const getGroupById = async (id: string): Promise<Group> => {
     return transformed;
   } catch (error: any) {
     console.error('[getGroupById] ❌ Error:', {
-      id: cleanId,
+      originalId: id,
+      validatedGroupId: groupId,
+      cleanId,
       url,
+      fullURL,
       status: error.response?.status,
       statusText: error.response?.statusText,
-      data: error.response?.data,
+      responseData: error.response?.data,
+      requestConfig: {
+        method: error.config?.method,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        hasInitData: !!error.config?.headers?.['X-Telegram-Init-Data'],
+        headers: {
+          'X-Telegram-Init-Data': error.config?.headers?.['X-Telegram-Init-Data'] ? 'present' : 'missing',
+          'Content-Type': error.config?.headers?.['Content-Type'],
+        },
+      },
       message: error.message,
-      fullError: error,
     });
     throw error;
   }
