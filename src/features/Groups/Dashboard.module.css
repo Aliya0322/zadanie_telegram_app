@@ -11,20 +11,24 @@
 }
 
 .navbar :global(.navbar-inner) {
-  display: flex;
+  display: flex !important;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-between !important;
   position: relative;
+  width: 100%;
 }
 
 .navbar :global(.navbar-left) {
-  flex: 0 0 auto;
-  min-width: auto;
+  flex: 0 0 0;
+  min-width: 0;
+  width: 0;
+  padding: 0;
+  margin: 0;
 }
 
 .navbar :global(.navbar-title) {
-  position: static;
-  transform: none;
+  position: static !important;
+  transform: none !important;
   text-align: left;
   width: auto;
   margin: 0;
@@ -37,8 +41,10 @@
 }
 
 .navbar :global(.navbar-right) {
-  flex: 0 0 auto;
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
   padding-right: 16px;
+  width: auto;
 }
 
 @media (max-width: 480px) {
@@ -58,12 +64,6 @@
   .calendarButtonContainer {
     padding-right: 12px;
   }
-}
-
-.navbar :global(.navbar-right) {
-  flex: 0 0 auto;
-  margin-left: auto;
-  margin-right: 16px;
 }
 
 .navbarTitle {
