@@ -79,14 +79,31 @@ const GroupDetailsPage = () => {
   }, [webApp]);
 
   const fetchGroup = async () => {
-    if (!id) return;
+    if (!id) {
+      console.error('[fetchGroup] No id provided from URL params');
+      return;
+    }
+
+    console.log('[fetchGroup] Starting fetch, id from URL:', {
+      id,
+      idType: typeof id,
+      idValue: id,
+      currentUrl: window.location.href,
+    });
 
     setIsLoading(true);
     try {
       const data = await getGroupById(id);
+      console.log('[fetchGroup] ✅ Group fetched successfully:', data);
       setGroup(data);
-    } catch (err) {
-      console.error('Error fetching group:', err);
+    } catch (err: any) {
+      console.error('[fetchGroup] ❌ Error fetching group:', {
+        error: err,
+        id,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+      });
       // Не используем моковые данные - редирект на dashboard
       setGroup(null);
       // Редирект на dashboard, если группа не найдена

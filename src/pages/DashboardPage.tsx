@@ -72,6 +72,12 @@ const DashboardPage = () => {
   const greetingName = getGreetingName();
 
   const handleGroupClick = (groupId: string) => {
+    console.log('[handleGroupClick] Navigating to group:', {
+      groupId,
+      groupIdType: typeof groupId,
+      groupIdValue: groupId,
+      url: `/groups/${groupId}`,
+    });
     navigate(`/groups/${groupId}`);
   };
 
@@ -401,6 +407,12 @@ const DashboardPage = () => {
           ) : groups.length > 0 ? (
             <div className={styles.groupsList}>
               {groups.map((group) => {
+                console.log('[DashboardPage] Rendering group:', {
+                  id: group.id,
+                  idType: typeof group.id,
+                  name: group.name,
+                  students: group.students,
+                });
                 const studentCount = group.students?.length || 0;
                 const hasHomework = dashboardData?.activeHomework?.some(hw => hw.groupId === group.id) || false;
                 return (

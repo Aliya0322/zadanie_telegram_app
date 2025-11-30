@@ -31,16 +31,61 @@ const transformGroup = (apiData: any): Group => ({
 
 // Получить все группы
 export const getGroups = async (): Promise<Group[]> => {
-  const response = await apiClient.get<any[]>('/groups');
-  // Преобразуем каждую группу из snake_case в camelCase
-  return response.data.map(transformGroup);
+  console.log('[getGroups] Fetching all groups...');
+  try {
+    const response = await apiClient.get<any[]>('/groups');
+    console.log('[getGroups] Raw response data:', response.data);
+    // Преобразуем каждую группу из snake_case в camelCase
+    const transformed = response.data.map(transformGroup);
+    console.log('[getGroups] Transformed groups:', transformed);
+    return transformed;
+  } catch (error: any) {
+    console.error('[getGroups] ❌ Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
 };
 
 // Получить группу по ID
 export const getGroupById = async (id: string): Promise<Group> => {
-  const response = await apiClient.get<any>(`/groups/${id}`);
-  // Преобразуем ответ API из snake_case в camelCase
-  return transformGroup(response.data);
+  // Логирование для отладки
+  console.log('[getGroupById] Fetching group:', {
+    id,
+    idType: typeof id,
+    idValue: id,
+    trimmed: id?.trim(),
+  });
+  
+  // Убеждаемся, что ID не содержит лишних пробелов
+  const cleanId = String(id).trim();
+  const url = `/groups/${cleanId}`;
+  
+  console.log('[getGroupById] Request URL:', url);
+  console.log('[getGroupById] Full URL will be:', `${apiClient.defaults.baseURL}${url}`);
+  
+  try {
+    const response = await apiClient.get<any>(url);
+    console.log('[getGroupById] ✅ Success, response data:', response.data);
+    // Преобразуем ответ API из snake_case в camelCase
+    const transformed = transformGroup(response.data);
+    console.log('[getGroupById] Transformed group:', transformed);
+    return transformed;
+  } catch (error: any) {
+    console.error('[getGroupById] ❌ Error:', {
+      id: cleanId,
+      url,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      fullError: error,
+    });
+    throw error;
+  }
 };
 
 // Создать новую группу
