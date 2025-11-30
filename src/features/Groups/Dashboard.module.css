@@ -8,15 +8,33 @@
 .navbar {
   background-color: white;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.navbar :global(.navbar-inner) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   position: relative;
+}
+
+.navbar :global(.navbar-left) {
+  flex: 0 0 60px;
+  min-width: 60px;
 }
 
 .navbar :global(.navbar-title) {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  width: auto;
   text-align: center;
+  width: auto;
+  margin: 0;
+  pointer-events: none;
+}
+
+.navbar :global(.navbar-right) {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .navbarTitle {

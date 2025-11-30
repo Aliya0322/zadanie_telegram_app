@@ -328,7 +328,7 @@ const DashboardPage = () => {
     <Page className={styles.page}>
       <Navbar 
         title="Мой Кабинет"
-        left={null}
+        left={<div style={{ width: '60px' }}></div>}
         right={
           <button onClick={handleLogout} className={styles.logoutButton}>
             Выйти
