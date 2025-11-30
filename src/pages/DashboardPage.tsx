@@ -133,12 +133,37 @@ const DashboardPage = () => {
       
       // Переходим на страницу новой группы
       navigate(`/groups/${newGroup.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating group:', error);
+      console.error('Error response:', error?.response);
+      console.error('Error message:', error?.message);
+      
+      // Формируем более информативное сообщение об ошибке
+      let errorMessage = 'Ошибка при создании группы.';
+      
+      if (error?.response?.data?.detail) {
+        // Если бэкенд вернул детальное описание ошибки
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        if (error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
+          errorMessage = 'Не удалось подключиться к серверу. Проверьте, что бэкенд запущен.';
+        } else {
+          errorMessage = `Ошибка: ${error.message}`;
+        }
+      } else if (error?.response?.status === 401) {
+        errorMessage = 'Ошибка авторизации. Пожалуйста, войдите заново.';
+      } else if (error?.response?.status === 403) {
+        errorMessage = 'Недостаточно прав для создания группы.';
+      } else if (error?.response?.status === 422) {
+        errorMessage = 'Некорректные данные. Проверьте введенные данные.';
+      }
+      
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert('Ошибка при создании группы. Попробуйте снова.');
+        window.Telegram.WebApp.showAlert(errorMessage);
       } else {
-        alert('Ошибка при создании группы');
+        alert(errorMessage);
       }
     } finally {
       setIsCreating(false);
@@ -400,7 +425,7 @@ const DashboardPage = () => {
           ) : (
             <div className={styles.groupsList}>
               <div className={styles.groupCard}>
-                <div className={styles.groupCardContent}>
+                <div className={styles.groupCardContentEmpty}>
                   <div className={styles.emptyText}>Нет актуальных групп</div>
                 </div>
               </div>

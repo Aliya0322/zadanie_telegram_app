@@ -28,6 +28,8 @@ apiClient.interceptors.request.use(
       if (initData) {
         // Ваш бэкенд должен проверить этот initData для авторизации
         config.headers['X-Telegram-Init-Data'] = initData;
+      } else {
+        console.warn('Telegram initData not found. Request may fail authentication.');
       }
     }
 
@@ -35,6 +37,18 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Логирование для отладки (только в development)
+    if (import.meta.env.DEV) {
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
+        baseURL: config.baseURL,
+        data: config.data,
+        headers: {
+          'X-Telegram-Init-Data': config.headers['X-Telegram-Init-Data'] ? 'present' : 'missing',
+          Authorization: config.headers.Authorization ? 'present' : 'missing',
+        },
+      });
     }
 
     return config;
