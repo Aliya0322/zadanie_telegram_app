@@ -22,6 +22,13 @@ import type { Group } from '../api/groupsApi';
 import { useTelegram } from '../hooks/useTelegram';
 import { useHomework } from '../features/Homework/hooks/useHomework';
 import type { CreateHomeworkDto } from '../api/homeworkApi';
+import { 
+  getScheduleByGroup, 
+  createSchedule, 
+  updateSchedule, 
+  deleteSchedule,
+  scheduleHelpers 
+} from '../api/scheduleApi';
 import { generateInviteLink } from '../utils/linkHelpers';
 import styles from '../features/Groups/GroupDetails.module.css';
 
@@ -43,17 +50,21 @@ const GroupDetailsPage = () => {
   const [scheduleToDelete, setScheduleToDelete] = useState<string | null>(null);
   const [homeworkToDelete, setHomeworkToDelete] = useState<string | null>(null);
   const [editingHomeworkId, setEditingHomeworkId] = useState<string | null>(null);
-  const [scheduleItems, setScheduleItems] = useState([
-    { id: '1', dayOfWeek: 'Понедельник', startTime: '18:00', duration: 90 },
-    { id: '2', dayOfWeek: 'Среда', startTime: '19:30', duration: 90 },
-    { id: '3', dayOfWeek: 'Пятница', startTime: '18:00', duration: 90 },
-  ]);
+  const [scheduleItems, setScheduleItems] = useState<Array<{
+    id: string;
+    dayOfWeek: string;
+    startTime: string;
+    duration: number;
+    meetingLink?: string;
+  }>>([]);
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduleFormData, setScheduleFormData] = useState({
     dayOfWeek: '',
     startTime: '',
-    duration: '90'
+    duration: '90',
+    meetingLink: ''
   });
   const { fetchHomework, create, update, remove, homework } = useHomework(id || undefined);
 
@@ -61,8 +72,38 @@ const GroupDetailsPage = () => {
     if (id) {
       fetchGroup();
       fetchHomework();
+      fetchSchedule();
     }
   }, [id]);
+
+  const fetchSchedule = async () => {
+    if (!id) return;
+    
+    const groupId = parseInt(id, 10);
+    if (isNaN(groupId)) {
+      console.error('[fetchSchedule] Invalid group ID:', id);
+      return;
+    }
+
+    setIsLoadingSchedule(true);
+    try {
+      const schedules = await getScheduleByGroup(groupId);
+      const transformed = schedules.map(schedule => scheduleHelpers.apiToDisplay(schedule));
+      setScheduleItems(transformed);
+      console.log('[fetchSchedule] ✅ Schedule fetched successfully:', transformed);
+    } catch (err: any) {
+      console.error('[fetchSchedule] ❌ Error fetching schedule:', {
+        error: err,
+        groupId,
+        status: err.response?.status,
+        responseData: err.response?.data,
+      });
+      // В случае ошибки оставляем пустой массив
+      setScheduleItems([]);
+    } finally {
+      setIsLoadingSchedule(false);
+    }
+  };
 
   useEffect(() => {
     // Скрываем MainButton Telegram на всех вкладках
@@ -202,7 +243,8 @@ const GroupDetailsPage = () => {
         setScheduleFormData({
           dayOfWeek: scheduleItem.dayOfWeek,
           startTime: scheduleItem.startTime,
-          duration: scheduleItem.duration.toString()
+          duration: scheduleItem.duration.toString(),
+          meetingLink: scheduleItem.meetingLink || ''
         });
         setEditingScheduleId(scheduleId);
       }
@@ -210,7 +252,8 @@ const GroupDetailsPage = () => {
       setScheduleFormData({
         dayOfWeek: '',
         startTime: '',
-        duration: '90'
+        duration: '90',
+        meetingLink: ''
       });
       setEditingScheduleId(null);
     }
@@ -223,70 +266,122 @@ const GroupDetailsPage = () => {
     setScheduleFormData({
       dayOfWeek: '',
       startTime: '',
-      duration: '90'
+      duration: '90',
+      meetingLink: ''
     });
   };
 
-  const handleSubmitSchedule = (e: React.FormEvent) => {
+  const handleSubmitSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!scheduleFormData.dayOfWeek.trim() || !scheduleFormData.startTime.trim() || !scheduleFormData.duration.trim()) {
+    if (!id || !scheduleFormData.dayOfWeek.trim() || !scheduleFormData.startTime.trim()) {
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert('Пожалуйста, заполните все поля');
+        window.Telegram.WebApp.showAlert('Пожалуйста, заполните все обязательные поля');
       } else {
-        alert('Пожалуйста, заполните все поля');
+        alert('Пожалуйста, заполните все обязательные поля');
       }
       return;
     }
 
-    const duration = parseInt(scheduleFormData.duration, 10);
-    if (isNaN(duration) || duration <= 0) {
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert('Продолжительность должна быть положительным числом');
-      } else {
-        alert('Продолжительность должна быть положительным числом');
-      }
+    const groupId = parseInt(id, 10);
+    if (isNaN(groupId)) {
+      console.error('[handleSubmitSchedule] Invalid group ID:', id);
       return;
     }
 
-    if (editingScheduleId) {
-      // Редактирование существующего элемента
-      setScheduleItems(prev => prev.map(item => 
-        item.id === editingScheduleId 
-          ? { ...item, dayOfWeek: scheduleFormData.dayOfWeek, startTime: scheduleFormData.startTime, duration }
-          : item
-      ));
-    } else {
-      // Добавление нового элемента
-      const newItem = {
-        id: Date.now().toString(),
-        dayOfWeek: scheduleFormData.dayOfWeek,
-        startTime: scheduleFormData.startTime,
-        duration
-      };
-      setScheduleItems(prev => [...prev, newItem]);
-    }
+    setIsLoadingSchedule(true);
+    try {
+      if (editingScheduleId) {
+        // Редактирование существующего элемента
+        const scheduleId = parseInt(editingScheduleId, 10);
+        if (isNaN(scheduleId)) {
+          throw new Error('Invalid schedule ID');
+        }
 
-    handleCloseScheduleModal();
+        const updateData = {
+          day_of_week: scheduleHelpers.formToApi(scheduleFormData, groupId).day_of_week,
+          time_at: scheduleHelpers.formToApi(scheduleFormData, groupId).time_at,
+          meeting_link: scheduleFormData.meetingLink || undefined,
+        };
+
+        const updated = await updateSchedule(scheduleId, updateData);
+        const transformed = scheduleHelpers.apiToDisplay(updated);
+        
+        setScheduleItems(prev => prev.map(item => 
+          item.id === editingScheduleId ? transformed : item
+        ));
+
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.showAlert('Расписание успешно обновлено!');
+        } else {
+          alert('Расписание успешно обновлено!');
+        }
+      } else {
+        // Добавление нового элемента
+        const createData = scheduleHelpers.formToApi(scheduleFormData, groupId);
+        const created = await createSchedule(createData);
+        const transformed = scheduleHelpers.apiToDisplay(created);
+        
+        setScheduleItems(prev => [...prev, transformed]);
+
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.showAlert('Занятие успешно добавлено в расписание!');
+        } else {
+          alert('Занятие успешно добавлено в расписание!');
+        }
+      }
+
+      handleCloseScheduleModal();
+    } catch (error: any) {
+      console.error('[handleSubmitSchedule] Error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Ошибка при сохранении расписания';
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert(errorMessage);
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsLoadingSchedule(false);
+    }
   };
 
   const handleDeleteSchedule = (scheduleId: string) => {
     setScheduleToDelete(scheduleId);
   };
 
-  const handleConfirmDeleteSchedule = () => {
+  const handleConfirmDeleteSchedule = async () => {
     if (!scheduleToDelete) return;
 
-    setScheduleItems(prev => prev.filter(item => item.id !== scheduleToDelete));
-    
-    // Показываем уведомление об успехе
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.showAlert('Занятие удалено из расписания');
-    } else {
-      alert('Занятие удалено из расписания');
+    const scheduleId = parseInt(scheduleToDelete, 10);
+    if (isNaN(scheduleId)) {
+      console.error('[handleConfirmDeleteSchedule] Invalid schedule ID:', scheduleToDelete);
+      setScheduleToDelete(null);
+      return;
     }
 
-    setScheduleToDelete(null);
+    setIsLoadingSchedule(true);
+    try {
+      await deleteSchedule(scheduleId);
+      setScheduleItems(prev => prev.filter(item => item.id !== scheduleToDelete));
+      
+      // Показываем уведомление об успехе
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert('Занятие удалено из расписания');
+      } else {
+        alert('Занятие удалено из расписания');
+      }
+    } catch (error: any) {
+      console.error('[handleConfirmDeleteSchedule] Error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Ошибка при удалении расписания';
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert(errorMessage);
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsLoadingSchedule(false);
+      setScheduleToDelete(null);
+    }
   };
 
   const handleCancelDeleteSchedule = () => {
@@ -658,7 +753,11 @@ const GroupDetailsPage = () => {
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>РАСПИСАНИЕ</h2>
               <div className={styles.pastHomeworkList}>
-                {scheduleItems.length > 0 ? (
+                {isLoadingSchedule ? (
+                  <div className={styles.currentHomeworkCard}>
+                    <div className={styles.currentHomeworkText}>Загрузка расписания...</div>
+                  </div>
+                ) : scheduleItems.length > 0 ? (
                   scheduleItems.map((item) => {
                     const endTime = calculateEndTime(item.startTime, item.duration);
                     return (
@@ -667,6 +766,14 @@ const GroupDetailsPage = () => {
                         <div className={`${styles.pastHomeworkContent} ${styles.flexContent}`}>
                           <div className={styles.pastHomeworkTitle}>{item.dayOfWeek}</div>
                           <div className={styles.pastHomeworkStatus}>{item.startTime} - {endTime}</div>
+                          {item.meetingLink && (
+                            <div className={styles.pastHomeworkStatus}>
+                              <LinkIcon className={styles.inviteLinkIcon} style={{ width: '14px', height: '14px', display: 'inline', marginRight: '4px' }} />
+                              <a href={item.meetingLink} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
+                                Ссылка на встречу
+                              </a>
+                            </div>
+                          )}
                         </div>
                         <button
                           onClick={(e) => {
@@ -675,6 +782,7 @@ const GroupDetailsPage = () => {
                           }}
                           className={styles.scheduleEditButton}
                           aria-label="Редактировать"
+                          disabled={isLoadingSchedule}
                         >
                           <PencilIcon className={styles.scheduleEditIcon} />
                         </button>
@@ -685,6 +793,7 @@ const GroupDetailsPage = () => {
                           }}
                           className={styles.removeStudentButton}
                           aria-label="Удалить"
+                          disabled={isLoadingSchedule}
                         >
                           <TrashIcon className={styles.removeStudentIcon} />
                         </button>
@@ -900,6 +1009,7 @@ const GroupDetailsPage = () => {
                   onChange={(e) => setScheduleFormData(prev => ({ ...prev, dayOfWeek: e.target.value }))}
                   className={styles.formInput}
                   required
+                  disabled={isLoadingSchedule}
                 >
                   <option value="">Выберите день</option>
                   <option value="Понедельник">Понедельник</option>
@@ -922,6 +1032,7 @@ const GroupDetailsPage = () => {
                   onChange={(e) => setScheduleFormData(prev => ({ ...prev, startTime: e.target.value }))}
                   className={styles.formInput}
                   required
+                  disabled={isLoadingSchedule}
                 />
               </div>
               
@@ -937,9 +1048,27 @@ const GroupDetailsPage = () => {
                   className={styles.formInput}
                   min="1"
                   required
+                  disabled={isLoadingSchedule}
                 />
                 <div className={`${styles.fileHint} ${styles.fileHintMargin}`}>
                   Введите продолжительность в минутах (например: 90 для полуторачасового занятия)
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Ссылка на встречу (Zoom, Google Meet и т.д.)
+                </label>
+                <input
+                  type="url"
+                  value={scheduleFormData.meetingLink}
+                  onChange={(e) => setScheduleFormData(prev => ({ ...prev, meetingLink: e.target.value }))}
+                  placeholder="https://zoom.us/j/..."
+                  className={styles.formInput}
+                  disabled={isLoadingSchedule}
+                />
+                <div className={`${styles.fileHint} ${styles.fileHintMargin}`}>
+                  Необязательное поле. Ссылка на онлайн-встречу для занятия
                 </div>
               </div>
               
@@ -954,9 +1083,11 @@ const GroupDetailsPage = () => {
                 <button
                   type="submit"
                   className={styles.formSubmitButton}
-                  disabled={!scheduleFormData.dayOfWeek.trim() || !scheduleFormData.startTime.trim() || !scheduleFormData.duration.trim()}
+                  disabled={isLoadingSchedule || !scheduleFormData.dayOfWeek.trim() || !scheduleFormData.startTime.trim()}
                 >
-                  {editingScheduleId ? 'Сохранить' : 'Добавить'}
+                  {isLoadingSchedule 
+                    ? (editingScheduleId ? 'Сохранение...' : 'Создание...') 
+                    : (editingScheduleId ? 'Сохранить' : 'Добавить')}
                 </button>
               </div>
             </form>
