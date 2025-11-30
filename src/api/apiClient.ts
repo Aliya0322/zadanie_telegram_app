@@ -86,11 +86,34 @@ apiClient.interceptors.request.use(
     // Получаем initData из всех возможных источников
     const initData = getTelegramInitData();
 
+    // Критичное логирование для важных запросов - видно в production
+    if (config.url?.includes('/auth/')) {
+      console.log('[API] Auth request:', {
+        url: config.url,
+        method: config.method,
+        hasInitData: !!initData,
+        initDataLength: initData ? initData.length : 0,
+      });
+    }
+
     if (initData) {
       // Бэкенд должен проверить этот initData для авторизации
       config.headers['X-Telegram-Init-Data'] = initData;
+      
+      if (config.url?.includes('/auth/')) {
+        console.log('[API] ✅ InitData found and added to request');
+      }
     } else {
-      // Логируем предупреждение только в development
+      // Критичное предупреждение для auth запросов - видно в production
+      if (config.url?.includes('/auth/')) {
+        console.error('[API] ❌ Telegram initData NOT FOUND for auth request!');
+        console.error('[API] Request will likely fail:', {
+          url: config.url,
+          method: config.method,
+        });
+      }
+      
+      // Детальное логирование для development
       if (import.meta.env.DEV) {
         console.warn('[API Client] Telegram initData not found. Request may fail authentication.');
         console.warn('[API Client] Available Telegram WebApp:', !!window.Telegram?.WebApp);
@@ -99,6 +122,13 @@ apiClient.interceptors.request.use(
           console.warn('[API Client] initDataUnsafe available:', !!webApp.initDataUnsafe);
           console.warn('[API Client] Platform:', webApp.platform);
           console.warn('[API Client] Version:', webApp.version);
+          
+          // Проверяем все возможные источники initData
+          console.warn('[API Client] Checking initData sources:');
+          console.warn('  - webApp.initData:', !!(webApp as any).initData);
+          console.warn('  - webApp.initDataRaw:', !!(webApp as any).initDataRaw);
+          console.warn('  - URL tgWebAppData:', !!new URLSearchParams(window.location.search).get('tgWebAppData'));
+          console.warn('  - URL _tgWebAppData:', !!new URLSearchParams(window.location.search).get('_tgWebAppData'));
         }
       }
     }
