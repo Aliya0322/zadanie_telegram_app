@@ -35,9 +35,23 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
+// Кэш для initData (на случай, если он становится недоступен после первого запроса)
+// Это важно для мобильных устройств, где initData может быть доступен только один раз
+let cachedInitData: string | null = null;
+
 // Функция для получения initData из всех возможных источников
 const getTelegramInitData = (): string | null => {
-  if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
+  // Если есть кэш и он не пустой, возвращаем его сразу
+  if (cachedInitData) {
+    return cachedInitData;
+  }
+
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  // Проверяем Telegram WebApp
+  if (!window.Telegram?.WebApp) {
     return null;
   }
 
@@ -46,35 +60,78 @@ const getTelegramInitData = (): string | null => {
   // Список возможных источников initData (в порядке приоритета)
   const sources = [
     // 1. Основной способ - webApp.initData
-    () => (webApp as any).initData,
+    { name: 'webApp.initData', get: () => (webApp as any).initData },
     // 2. Альтернативный способ - webApp.initDataRaw
-    () => (webApp as any).initDataRaw,
-    // 3. URL параметр tgWebAppData
-    () => new URLSearchParams(window.location.search).get('tgWebAppData'),
+    { name: 'webApp.initDataRaw', get: () => (webApp as any).initDataRaw },
+    // 3. URL параметр tgWebAppData (из search)
+    { name: 'URL search tgWebAppData', get: () => new URLSearchParams(window.location.search).get('tgWebAppData') },
     // 4. URL параметр _tgWebAppData (с подчеркиванием)
-    () => new URLSearchParams(window.location.search).get('_tgWebAppData'),
-    // 5. Проверяем hash часть URL (может содержать initData)
-    () => {
-      const hash = window.location.hash;
-      if (hash) {
-        const hashParams = new URLSearchParams(hash.substring(1));
-        return hashParams.get('tgWebAppData') || hashParams.get('_tgWebAppData');
+    { name: 'URL search _tgWebAppData', get: () => new URLSearchParams(window.location.search).get('_tgWebAppData') },
+    // 5. Проверяем hash часть URL
+    { 
+      name: 'URL hash', 
+      get: () => {
+        const hash = window.location.hash;
+        if (hash) {
+          const hashParams = new URLSearchParams(hash.substring(1));
+          return hashParams.get('tgWebAppData') || hashParams.get('_tgWebAppData');
+        }
+        return null;
       }
-      return null;
+    },
+    // 6. Попробуем получить из полного URL (может быть в разных местах)
+    { 
+      name: 'Full URL', 
+      get: () => {
+        try {
+          const fullUrl = window.location.href;
+          const urlObj = new URL(fullUrl);
+          return urlObj.searchParams.get('tgWebAppData') || urlObj.searchParams.get('_tgWebAppData');
+        } catch {
+          return null;
+        }
+      }
+    },
+    // 7. Попробуем получить из window.location.search напрямую (на случай разных форматов)
+    {
+      name: 'Direct search params',
+      get: () => {
+        const search = window.location.search;
+        const match = search.match(/[?&](?:tgWebAppData|_tgWebAppData)=([^&]+)/);
+        return match ? decodeURIComponent(match[1]) : null;
+      }
     },
   ];
 
   // Пробуем каждый источник
-  for (const getSource of sources) {
+  for (let i = 0; i < sources.length; i++) {
+    const source = sources[i];
     try {
-      const data = getSource();
+      const data = source.get();
       if (data && typeof data === 'string' && data.trim().length > 0) {
+        // Кэшируем найденный initData для последующих запросов
+        cachedInitData = data;
+        console.log(`[API] ✅ InitData found and cached from source: ${source.name} (${i + 1}/${sources.length})`);
         return data;
       }
     } catch (error) {
       // Пропускаем ошибки и пробуем следующий источник
       continue;
     }
+  }
+
+  // Если ничего не нашли, логируем все доступные источники для отладки
+  console.error('[API] ❌ InitData not found in any source. Available info:');
+  console.error('  - Telegram WebApp:', !!window.Telegram?.WebApp);
+  if (window.Telegram?.WebApp) {
+    const webApp = window.Telegram.WebApp;
+    console.error('  - Platform:', webApp.platform);
+    console.error('  - Version:', webApp.version);
+    console.error('  - URL:', window.location.href);
+    console.error('  - Search:', window.location.search);
+    console.error('  - Hash:', window.location.hash);
+    console.error('  - webApp.initData:', !!(webApp as any).initData);
+    console.error('  - webApp.initDataRaw:', !!(webApp as any).initDataRaw);
   }
 
   return null;
