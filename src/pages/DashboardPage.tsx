@@ -11,12 +11,6 @@ import type { DashboardData } from '../api/userApi';
 // Импорт модульных стилей
 import styles from '../features/Groups/Dashboard.module.css';
 
-// Моковые данные расписания с датами
-const mockSchedule = [
-  { time: '18:00', title: 'Математика ОГЭ', group: 'Группа А' },
-  { time: '19:30', title: 'Алгебра', group: 'Иван П.' },
-];
-
 // Моковые данные расписания по дням (для календаря)
 const mockScheduleByDate: Record<string, Array<{ time: string; title: string; group: string }>> = {
   '2024-12-01': [
@@ -37,12 +31,6 @@ const mockScheduleByDate: Record<string, Array<{ time: string; title: string; gr
     { time: '18:00', title: 'Математика ОГЭ', group: 'Группа А' },
   ],
 };
-
-const mockGroups = [
-  { id: '1', name: 'Математика, ОГЭ (Группа А)', count: 5, homework: 'Активно' },
-  { id: '2', name: 'Английский, ЕГЭ (Вторник)', count: 3, homework: 'Нет' },
-  { id: '3', name: 'Индивидуально (Петя В.)', count: 1, homework: null },
-];
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -258,17 +246,10 @@ const DashboardPage = () => {
         setDashboardData(data);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        // В случае ошибки используем моковые данные
+        // В случае ошибки устанавливаем пустые данные
         setDashboardData({
           userRole: user?.role || 'teacher',
-          groups: mockGroups.map(g => ({
-            id: g.id,
-            name: g.name,
-            teacherId: user?.id || '',
-            students: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })),
+          groups: [],
           schedule: [],
           activeHomework: [],
         });
@@ -277,28 +258,32 @@ const DashboardPage = () => {
       }
     };
 
-    fetchDashboardData();
+    if (user) {
+      fetchDashboardData();
+    }
   }, [user]);
 
   const calendarDays = generateCalendar();
   const calendarMonthYear = getCalendarMonthYear();
   
-  // Используем данные из API или моковые данные
-  const groups = dashboardData?.groups || mockGroups.map(g => ({
-    id: g.id,
-    name: g.name,
-    teacherId: user?.id || '',
-    students: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }));
+  // Используем только данные из API (без fallback на моковые данные)
+  const groups = dashboardData?.groups || [];
   
-  const todaySchedule = dashboardData?.schedule || mockSchedule.map(item => ({
-    id: item.time,
-    groupId: '1',
-    groupName: item.group,
-    startTime: item.time,
-  }));
+  // Фильтруем расписание на сегодня
+  const today = new Date();
+  const todayDateString = today.toISOString().split('T')[0];
+  const todaySchedule = dashboardData?.schedule?.filter(item => {
+    // Если есть конкретная дата - сравниваем
+    if (item.date) {
+      return item.date === todayDateString;
+    }
+    // Если указан день недели - проверяем
+    if (item.dayOfWeek !== undefined) {
+      const todayDayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; // Преобразуем воскресенье из 0 в 6
+      return item.dayOfWeek === todayDayOfWeek;
+    }
+    return false;
+  }) || [];
 
   return (
     <Page className={styles.page}>
@@ -319,8 +304,12 @@ const DashboardPage = () => {
 
       <div className={styles.content}>
         {/* Приветствие */}
-        <div className={styles.greetingSectionWithButton}>
+        <div className={styles.greetingSection}>
           <span className={styles.greetingText}>Здравствуйте, {userName}!</span>
+        </div>
+        
+        {/* Кнопка календаря - на уровень ниже, справа */}
+        <div className={styles.calendarButtonContainer}>
           <button 
             onClick={handleCalendarClick}
             className={styles.calendarButton}
@@ -331,74 +320,92 @@ const DashboardPage = () => {
         </div>
 
         {/* Сегодняшние занятия */}
-        {!isLoading && todaySchedule.length > 0 && (
+        {!isLoading && (
           <Block className={styles.scheduleBlock}>
-            <div className={styles.scheduleHeader}>
-              <span className={styles.scheduleTitle}>
-                СЕГОДНЯ: {todaySchedule.length} {todaySchedule.length === 1 ? 'занятие' : todaySchedule.length < 5 ? 'занятия' : 'занятий'}
-              </span>
-            </div>
-            
-            <div className={styles.scheduleList}>
-            {todaySchedule.map((item) => (
-                <div key={item.id} className={styles.scheduleItem}>
-                  <ClockIcon className={styles.clockIcon} />
-                  <div className={styles.scheduleItemContent}>
-                    <span className={styles.scheduleTime}>{item.startTime}</span>
-                    <span className={styles.scheduleSeparator}> - </span>
-                    <span className={styles.scheduleSubject}>{item.groupName}</span>
-                  </div>
+            {todaySchedule.length > 0 ? (
+              <>
+                <div className={styles.scheduleHeader}>
+                  <span className={styles.scheduleTitle}>
+                    СЕГОДНЯ: {todaySchedule.length} {todaySchedule.length === 1 ? 'занятие' : todaySchedule.length < 5 ? 'занятия' : 'занятий'}
+                  </span>
                 </div>
-            ))}
-            </div>
-        </Block>
+                
+                <div className={styles.scheduleList}>
+                  {todaySchedule.map((item) => (
+                    <div key={item.id} className={styles.scheduleItem}>
+                      <ClockIcon className={styles.clockIcon} />
+                      <div className={styles.scheduleItemContent}>
+                        <span className={styles.scheduleTime}>{item.startTime}</span>
+                        <span className={styles.scheduleSeparator}> - </span>
+                        <span className={styles.scheduleSubject}>{item.groupName}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className={styles.emptyText}>
+                Нет актуального расписания
+              </div>
+            )}
+          </Block>
         )}
 
         {/* Мои группы */}
         <div className={styles.groupsSection}>
           <h2 className={styles.groupsTitle}>МОИ ГРУППЫ</h2>
           
-          <div className={styles.groupsList}>
           {isLoading ? (
-            <div className={styles.groupCard}>
-              <div className={styles.groupCardContent}>
-                <div className={styles.groupName}>Загрузка...</div>
+            <div className={styles.groupsList}>
+              <div className={styles.groupCard}>
+                <div className={styles.groupCardContent}>
+                  <div className={styles.groupName}>Загрузка...</div>
+                </div>
               </div>
             </div>
-          ) : (
-            groups.map((group) => {
-              const studentCount = group.students?.length || 0;
-              const hasHomework = dashboardData?.activeHomework?.some(hw => hw.groupId === group.id) || false;
-              return (
-                <div 
-                  key={group.id}
-                  className={styles.groupCard}
-                  onClick={() => handleGroupClick(group.id)}
-                >
-                  <div className={styles.groupCardContent}>
-                    <div className={styles.groupInfo}>
-                      <div className={styles.groupName}>{group.name}</div>
-                      <div className={styles.groupMeta}>
-                        <span className={styles.groupStudents}>
-                          {studentCount} {studentCount === 1 ? 'ученик' : studentCount < 5 ? 'ученика' : 'учеников'}
-                        </span>
-                        {hasHomework && (
-                          <>
-                            <span className={styles.groupSeparator}> | </span>
-                            <span className={styles.groupHomework}>
-                              ДЗ: Активно
-                            </span>
-                          </>
-                        )}
+          ) : groups.length > 0 ? (
+            <div className={styles.groupsList}>
+              {groups.map((group) => {
+                const studentCount = group.students?.length || 0;
+                const hasHomework = dashboardData?.activeHomework?.some(hw => hw.groupId === group.id) || false;
+                return (
+                  <div 
+                    key={group.id}
+                    className={styles.groupCard}
+                    onClick={() => handleGroupClick(group.id)}
+                  >
+                    <div className={styles.groupCardContent}>
+                      <div className={styles.groupInfo}>
+                        <div className={styles.groupName}>{group.name}</div>
+                        <div className={styles.groupMeta}>
+                          <span className={styles.groupStudents}>
+                            {studentCount} {studentCount === 1 ? 'ученик' : studentCount < 5 ? 'ученика' : 'учеников'}
+                          </span>
+                          {hasHomework && (
+                            <>
+                              <span className={styles.groupSeparator}> | </span>
+                              <span className={styles.groupHomework}>
+                                ДЗ: Активно
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
+                      <span className={styles.groupArrow}>›</span>
                     </div>
-                    <span className={styles.groupArrow}>›</span>
                   </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className={styles.groupsList}>
+              <div className={styles.groupCard}>
+                <div className={styles.groupCardContent}>
+                  <div className={styles.emptyText}>Нет актуальных групп</div>
                 </div>
-              );
-            })
+              </div>
+            </div>
           )}
-          </div>
         </div>
 
         {/* Кнопка создания группы */}
