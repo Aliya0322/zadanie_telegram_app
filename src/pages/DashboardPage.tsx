@@ -34,7 +34,7 @@ const mockScheduleByDate: Record<string, Array<{ time: string; title: string; gr
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { user: telegramUser } = useTelegram();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -191,6 +191,11 @@ const DashboardPage = () => {
     navigate(-1);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
 
   const handleCalendarClick = () => {
     setIsCalendarOpen(true);
@@ -327,9 +332,10 @@ const DashboardPage = () => {
     <Page className={styles.page}>
       <Navbar 
         title="Мой Кабинет"
-        left={
-          <button onClick={handleBack} className={styles.navButton}>
-            <ArrowLeftIcon className={styles.navIcon} />
+        left={null}
+        right={
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            Выйти
           </button>
         }
         className={styles.navbar}
