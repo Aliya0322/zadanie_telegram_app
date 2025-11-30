@@ -22,7 +22,17 @@ const LoadingFallback: React.FC = () => (
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  // Логирование для отладки
+  if (import.meta.env.DEV) {
+    console.log('[ProtectedRoute] Check:', {
+      isLoading,
+      isAuthenticated,
+      hasUser: !!user,
+      userId: user?.id,
+    });
+  }
 
   if (isLoading) {
     return (
@@ -33,9 +43,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
 
   if (!isAuthenticated) {
+    console.log('[ProtectedRoute] ❌ Not authenticated, redirecting to /login');
     return <Navigate to="/login" replace />;
   }
 
+  console.log('[ProtectedRoute] ✅ Authenticated, rendering children');
   return <>{children}</>;
 };
 

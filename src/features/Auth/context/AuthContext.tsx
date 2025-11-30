@@ -87,14 +87,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const currentUser = await getCurrentUser();
             
             // Используем telegramId из initDataUnsafe, если API не вернул его
+            // telegramIdFromAPI может быть undefined, так как бэкенд может не возвращать его в ответе
+            // Это нормально - мы используем telegramId только для идентификации пользователя через initData
             const finalTelegramId = currentUser.telegramId || telegramId?.toString();
             
             console.log('[Auth] ✅ API call successful, user found:', {
               userId: currentUser.id,
-              telegramIdFromAPI: currentUser.telegramId,
+              telegramIdFromAPI: currentUser.telegramId || 'not returned by API (using from initData)',
               telegramIdFromInitData: telegramId,
               finalTelegramId: finalTelegramId,
               role: currentUser.role,
+              note: 'telegramIdFromAPI может быть undefined - это нормально, используем telegramId из initDataUnsafe',
             });
             
             // Если пользователь найден, автоматически логиним
@@ -109,7 +112,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               timezone: currentUser.timezone,
             };
             
+            // Устанавливаем пользователя в состояние
+            console.log('[Auth] Setting user in state:', {
+              userId: contextUser.id,
+              telegramId: contextUser.telegramId,
+              role: contextUser.role,
+            });
+            
             setUser(contextUser);
+            
+            // Важно: setIsLoading должен быть после setUser, но мы используем useEffect для проверки обновления
+            // Проверяем, что состояние действительно обновилось
+            setTimeout(() => {
+              console.log('[Auth] State updated, setting isLoading to false');
+              setIsLoading(false);
+            }, 100); // Небольшая задержка, чтобы React успел обновить состояние
             
             if (import.meta.env.DEV) {
               console.log('[AuthContext] ✅ User authenticated successfully:', {
@@ -120,7 +137,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               });
             }
             
-            setIsLoading(false);
             return;
           } catch (error: any) {
             // Критичное логирование ошибки - видно в production
@@ -210,6 +226,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Не сохраняем в localStorage - используем только Telegram initData
     }
   };
+
+  // Логирование изменений состояния для отладки
+  useEffect(() => {
+    console.log('[Auth] State changed:', {
+      hasUser: !!user,
+      userId: user?.id,
+      telegramId: user?.telegramId,
+      role: user?.role,
+      isAuthenticated: !!user,
+      isLoading: isLoading,
+    });
+  }, [user, isLoading]);
 
   return (
     <AuthContext.Provider
