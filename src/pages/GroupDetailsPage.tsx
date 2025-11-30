@@ -87,17 +87,10 @@ const GroupDetailsPage = () => {
       setGroup(data);
     } catch (err) {
       console.error('Error fetching group:', err);
-      // Используем моковые данные для демо
-      setGroup({
-        id: id,
-        name: 'Математика, ОГЭ',
-        description: 'Группа подготовки к ОГЭ',
-        teacherId: '1',
-        students: ['student1', 'student2', 'student3'],
-        inviteToken: 'XYZ1A2B3C', // Моковый токен для демо
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      // Не используем моковые данные - редирект на dashboard
+      setGroup(null);
+      // Редирект на dashboard, если группа не найдена
+      navigate('/teacher/dashboard');
     } finally {
       setIsLoading(false);
     }
@@ -428,39 +421,10 @@ const GroupDetailsPage = () => {
     setHomeworkToDelete(null);
   };
 
-  if (isLoading) {
-    return (
-      <Page>
-        <Navbar title="Загрузка..." />
-        <Block>
-          <p className="text-center text-gray-500">Загрузка группы...</p>
-        </Block>
-      </Page>
-    );
-  }
-
-  if (!group) {
-    return (
-      <Page>
-        <Navbar 
-          title="Ошибка" 
-          left={
-            <button onClick={() => navigate('/dashboard')} className="text-blue-600">
-              Назад
-            </button>
-          }
-        />
-        <Block>
-          <p className="text-center text-red-500">Группа не найдена</p>
-        </Block>
-      </Page>
-    );
-  }
-
   return (
     <Page className={styles.page}>
       <Navbar 
-        title={group.name} 
+        title={isLoading ? 'Загрузка...' : (group?.name || 'Группа')} 
         left={
           <button onClick={handleBack} className={styles.navButton}>
             <ArrowLeftIcon className={styles.navIcon} />
@@ -588,7 +552,7 @@ const GroupDetailsPage = () => {
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>УЧЕНИКИ</h2>
               <div className={styles.pastHomeworkList}>
-                {group.students && group.students.length > 0 ? (
+                {group?.students && group.students.length > 0 ? (
                   group.students.map((studentId, index) => (
                     <div key={index} className={styles.pastHomeworkCard}>
                       <UserGroupIcon className={`${styles.pastHomeworkIcon} ${styles.iconBlue}`} />
@@ -619,7 +583,7 @@ const GroupDetailsPage = () => {
             </div>
 
             {/* Блок приглашения внизу */}
-            {group.inviteToken && (
+            {group?.inviteToken && (
               <div className={styles.section}>
                 <div className={styles.inviteHeader}>
                   <h2 className={styles.sectionTitle}>ПРИГЛАШЕНИЕ УЧЕНИКОВ</h2>
@@ -642,8 +606,8 @@ const GroupDetailsPage = () => {
                       <LinkIcon className={styles.inviteLinkIcon} />
                       <div className={styles.inviteLinkContent}>
                         <div className={styles.inviteLinkLabel}>Ссылка для группы</div>
-                        <div className={styles.inviteLinkValue} title={generateInviteLink(group.inviteToken)}>
-                          {generateInviteLink(group.inviteToken)}
+                        <div className={styles.inviteLinkValue} title={generateInviteLink(group?.inviteToken || '')}>
+                          {generateInviteLink(group?.inviteToken || '')}
                         </div>
                       </div>
                     </div>
