@@ -5,7 +5,7 @@ import { AcademicCapIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outlin
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import { timezones, getDefaultTimezone } from '../utils/timezones';
-import { login as authLogin, updateRole, getCurrentUser, type UpdateRoleRequest } from '../api/authApi';
+import { login as authLogin, getCurrentUser, type UpdateRoleRequest } from '../api/authApi';
 import logo from '../assets/images/logo.png';
 import styles from './Login.module.css';
 
@@ -205,36 +205,28 @@ const LoginPage: React.FC = () => {
     };
     
     try {
-      // Сначала делаем логин/регистрацию через /auth/login
+      // Делаем логин/регистрацию через /auth/login с данными регистрации
       // initData будет автоматически добавлен в заголовки через interceptor
-      let loginResponse;
-      try {
-        loginResponse = await authLogin();
-      } catch (loginError) {
-        console.error('Login error:', loginError);
-        // Если пользователь уже залогинен, продолжаем
-        throw loginError;
-      }
-
-      console.log('[LoginPage] Sending updateRole request with data:', updateData);
+      // Теперь login объединен с updateRole, можно передать данные регистрации сразу
+      console.log('[LoginPage] Sending login/registration request with data:', updateData);
       
-      const updatedUser = await updateRole(updateData);
+      const loginResponse = await authLogin(updateData);
       
-      console.log('[LoginPage] updateRole successful, user updated:', {
-        userId: updatedUser.id,
-        role: updatedUser.role,
+      console.log('[LoginPage] Login/registration successful, user:', {
+        userId: loginResponse.user.id,
+        role: loginResponse.user.role,
       });
       
       // Сохраняем пользователя в контекст (преобразуем в формат AuthContext)
       const contextUser = {
-        id: updatedUser.id,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        middleName: updatedUser.middleName,
-        birthDate: updatedUser.birthDate,
-        role: updatedUser.role,
-        telegramId: updatedUser.telegramId,
-        timezone: updatedUser.timezone,
+        id: loginResponse.user.id,
+        firstName: loginResponse.user.firstName,
+        lastName: loginResponse.user.lastName,
+        middleName: loginResponse.user.middleName,
+        birthDate: loginResponse.user.birthDate,
+        role: loginResponse.user.role,
+        telegramId: loginResponse.user.telegramId,
+        timezone: loginResponse.user.timezone,
       };
       login(contextUser, loginResponse.token || '');
       
