@@ -40,8 +40,30 @@ export const getCurrentUser = async (): Promise<User> => {
 };
 
 // Обновить роль пользователя (для регистрации как учитель)
+// Бэкенд ожидает snake_case формат
 export const updateRole = async (data: UpdateRoleRequest): Promise<User> => {
-  const response = await apiClient.post<User>('/auth/update-role', data);
+  // Конвертируем camelCase в snake_case для бэкенда
+  const requestData: any = {
+    role: data.role,
+  };
+  
+  if (data.firstName !== undefined) {
+    requestData.first_name = data.firstName;
+  }
+  if (data.lastName !== undefined) {
+    requestData.last_name = data.lastName;
+  }
+  if (data.middleName !== undefined) {
+    requestData.middle_name = data.middleName;
+  }
+  if (data.birthDate !== undefined) {
+    requestData.birth_date = data.birthDate;
+  }
+  if (data.timezone !== undefined) {
+    requestData.timezone = data.timezone;
+  }
+  
+  const response = await apiClient.post<User>('/auth/update-role', requestData);
   return response.data;
 };
 

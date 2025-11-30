@@ -5,7 +5,7 @@ import { AcademicCapIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outlin
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import { timezones, getDefaultTimezone } from '../utils/timezones';
-import { login as authLogin, updateRole, getCurrentUser } from '../api/authApi';
+import { login as authLogin, updateRole, getCurrentUser, type UpdateRoleRequest } from '../api/authApi';
 import logo from '../assets/images/logo.png';
 import styles from './Login.module.css';
 
@@ -88,18 +88,20 @@ const LoginPage: React.FC = () => {
               timezone: currentUser.timezone,
             };
             
+            console.log('[LoginPage] Calling login() to set user in context...');
             login(contextUser, 'telegram-auth');
             
-            if (import.meta.env.DEV) {
+            // Даем время на обновление состояния перед редиректом
+            setTimeout(() => {
               console.log('[LoginPage] ✅ User authenticated, redirecting to dashboard');
-            }
-            
-            // Перенаправляем на dashboard
-            if (currentUser.role === 'teacher') {
-              navigate('/teacher/dashboard', { replace: true });
-            } else {
-              navigate('/student/dashboard', { replace: true });
-            }
+              
+              // Перенаправляем на dashboard
+              if (currentUser.role === 'teacher') {
+                navigate('/teacher/dashboard', { replace: true });
+              } else {
+                navigate('/student/dashboard', { replace: true });
+              }
+            }, 100);
             return;
           } catch (error: any) {
             // Пользователь не зарегистрирован - показываем форму регистрации
@@ -191,9 +193,18 @@ const LoginPage: React.FC = () => {
 
     setIsLoading(true);
     
+    // Подготавливаем данные для регистрации (объявляем вне try, чтобы использовать в catch)
+    const formData = selectedRole === 'student' ? studentForm : teacherForm;
+    const updateData: UpdateRoleRequest = {
+      role: selectedRole,
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      birthDate: formData.birthDate,
+      timezone: formData.timezone,
+      ...(selectedRole === 'teacher' && { middleName: teacherForm.middleName.trim() }),
+    };
+    
     try {
-      const formData = selectedRole === 'student' ? studentForm : teacherForm;
-      
       // Сначала делаем логин/регистрацию через /auth/login
       // initData будет автоматически добавлен в заголовки через interceptor
       let loginResponse;
@@ -205,17 +216,14 @@ const LoginPage: React.FC = () => {
         throw loginError;
       }
 
-      // Затем обновляем роль и данные пользователя
-      const updateData = {
-        role: selectedRole,
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        birthDate: formData.birthDate,
-        timezone: formData.timezone,
-        ...(selectedRole === 'teacher' && { middleName: teacherForm.middleName.trim() }),
-      };
-
+      console.log('[LoginPage] Sending updateRole request with data:', updateData);
+      
       const updatedUser = await updateRole(updateData);
+      
+      console.log('[LoginPage] updateRole successful, user updated:', {
+        userId: updatedUser.id,
+        role: updatedUser.role,
+      });
       
       // Сохраняем пользователя в контекст (преобразуем в формат AuthContext)
       const contextUser = {
@@ -236,14 +244,54 @@ const LoginPage: React.FC = () => {
       } else {
         navigate('/student/dashboard');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Ошибка при входе. Попробуйте снова.';
+    } catch (error: any) {
+      console.error('[LoginPage] Registration error:', error);
+      
+      // Детальная обработка ошибок
+      let errorMessage = 'Ошибка при регистрации. Попробуйте снова.';
+      
+      if (error?.response?.status === 422) {
+        // Ошибка валидации данных
+        const detail = error.response?.data?.detail;
+        if (Array.isArray(detail)) {
+          // FastAPI возвращает массив ошибок валидации
+          const errors = detail.map((err: any) => {
+            const field = err.loc?.join('.') || 'unknown';
+            const message = err.msg || 'Invalid value';
+            return `${field}: ${message}`;
+          }).join('\n');
+          errorMessage = `Ошибка валидации данных:\n${errors}`;
+        } else if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else {
+          errorMessage = 'Ошибка валидации данных. Проверьте введенные данные.';
+        }
+        
+        console.error('[LoginPage] Validation error details:', {
+          status: 422,
+          data: error.response?.data,
+          sentData: updateData,
+        });
+      } else if (error?.response?.status === 401) {
+        errorMessage = 'Ошибка авторизации. Проверьте, что вы открыли приложение через Telegram.';
+      } else if (error?.response?.status === 403) {
+        errorMessage = 'Недостаточно прав для выполнения операции.';
+      } else if (error?.message?.includes('Network Error') || !error?.response) {
+        errorMessage = 'Не удалось подключиться к серверу. Проверьте подключение к интернету.';
+      } else if (error?.message) {
+        errorMessage = `Ошибка: ${error.message}`;
+      }
+      
+      console.error('[LoginPage] Final error message:', errorMessage);
       
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert(errorMessage);
+        try {
+          window.Telegram.WebApp.showAlert(errorMessage);
+        } catch (alertError) {
+          alert(errorMessage);
+        }
       } else {
         alert(errorMessage);
       }
