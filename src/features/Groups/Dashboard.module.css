@@ -270,6 +270,17 @@
 .content {
   padding: 16px;
   padding-bottom: 100px; /* Space for bottom button */
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Мобильная адаптация для контента */
+@media (max-width: 480px) {
+  .content {
+    padding: 12px;
+    padding-bottom: 100px;
+  }
 }
 
 /* Приветствие */
@@ -307,6 +318,12 @@
   color: #1f2937;
 }
 
+@media (max-width: 480px) {
+  .greetingText {
+    font-size: 15px;
+  }
+}
+
 /* Секция "Сегодняшние занятия" */
 .scheduleBlock {
   background-color: white;
@@ -314,6 +331,15 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   padding: 16px;
   margin-bottom: 24px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .scheduleBlock {
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+  }
 }
 
 .scheduleHeader {
@@ -413,6 +439,13 @@
   padding: 0 4px;
 }
 
+@media (max-width: 480px) {
+  .groupsTitle {
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+}
+
 .groupsList {
   display: flex;
   flex-direction: column;
@@ -425,6 +458,13 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .groupCard {
+    border-radius: 10px;
+  }
 }
 
 .groupCard:active {
@@ -437,6 +477,14 @@
   align-items: center;
   padding: 16px;
   gap: 12px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .groupCardContent {
+    padding: 12px;
+    gap: 10px;
+  }
 }
 
 .groupIcon {
@@ -463,12 +511,25 @@
   word-wrap: break-word;
 }
 
+@media (max-width: 480px) {
+  .groupName {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+}
+
 .groupMeta {
   font-size: 13px;
   color: #6b7280;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .groupMeta {
+    font-size: 12px;
+  }
 }
 
 .groupStudents {
@@ -523,6 +584,17 @@
 .createGroupButton:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Мобильная адаптация для кнопки создания группы */
+@media (max-width: 480px) {
+  .createGroupButton {
+    left: 12px;
+    right: 12px;
+    max-width: calc(100vw - 24px);
+    padding: 14px 20px;
+    font-size: 14px;
+  }
 }
 
 /* Адаптивность для больших экранов */
@@ -589,6 +661,14 @@
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .calendarModal {
+    padding: 10px;
+    align-items: flex-end;
+  }
 }
 
 .calendarModalContent {
@@ -602,6 +682,15 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .calendarModalContent {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 16px 16px 0 0;
+  }
 }
 
 .calendarHeader {
