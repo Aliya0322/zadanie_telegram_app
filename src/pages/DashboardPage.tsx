@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Page, Navbar, Block } from 'konsta/react';
-import { ArrowLeftIcon, EllipsisVerticalIcon, ClockIcon, CalendarIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ClockIcon, CalendarIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import { createGroup } from '../api/groupsApi';
@@ -47,16 +47,14 @@ const DashboardPage = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Получение имени пользователя из TG SDK или из контекста авторизации
-  // Для учителя: имя, отчество, фамилия
-  // Для студента: имя, фамилия
-  const getUserName = () => {
-    if (user?.role === 'teacher' && user.firstName && user.lastName) {
+  // Получение имени пользователя для приветствия
+  // Для учителя: только имя и отчество (без фамилии)
+  const getGreetingName = () => {
+    if (user?.role === 'teacher') {
       const parts = [user.firstName];
       if (user.middleName) {
         parts.push(user.middleName);
       }
-      parts.push(user.lastName);
       return parts.join(' ');
     }
     
@@ -68,10 +66,10 @@ const DashboardPage = () => {
       return `${telegramUser.firstName} ${telegramUser.lastName}`;
     }
     
-    return user?.firstName || telegramUser?.firstName || 'Мария Ивановна';
+    return user?.firstName || telegramUser?.firstName || 'Пользователь';
   };
   
-  const userName = getUserName();
+  const greetingName = getGreetingName();
 
   const handleGroupClick = (groupId: string) => {
     navigate(`/groups/${groupId}`);
@@ -193,10 +191,6 @@ const DashboardPage = () => {
     navigate(-1);
   };
 
-  const handleMenu = () => {
-    console.log('Открыть меню');
-    // TODO: Open menu
-  };
 
   const handleCalendarClick = () => {
     setIsCalendarOpen(true);
@@ -338,18 +332,13 @@ const DashboardPage = () => {
             <ArrowLeftIcon className={styles.navIcon} />
           </button>
         }
-        right={
-          <button onClick={handleMenu} className={styles.navButton}>
-            <EllipsisVerticalIcon className={styles.navIcon} />
-          </button>
-        }
         className={styles.navbar}
       />
 
       <div className={styles.content}>
         {/* Приветствие */}
         <div className={styles.greetingSection}>
-          <span className={styles.greetingText}>Здравствуйте, {userName}!</span>
+          <span className={styles.greetingText}>Здравствуйте, {greetingName}!</span>
         </div>
         
         {/* Кнопка календаря - на уровень ниже, справа */}
