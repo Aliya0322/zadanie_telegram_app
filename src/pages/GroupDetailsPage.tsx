@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Page, Navbar, Block } from 'konsta/react';
+import { Page, Navbar } from 'konsta/react';
 import { 
   DocumentTextIcon, 
   CalendarIcon,
