@@ -28,26 +28,35 @@
   text-align: left;
   width: auto;
   margin: 0;
-  margin-left: 16px;
+  padding-left: 16px;
   pointer-events: none;
-  flex: 1;
+  flex: 0 0 auto;
   font-size: 18px;
   font-weight: 600;
   color: #1f2937;
 }
 
+.navbar :global(.navbar-right) {
+  flex: 0 0 auto;
+  padding-right: 16px;
+}
+
 @media (max-width: 480px) {
   .navbar :global(.navbar-title) {
     font-size: 16px;
-    margin-left: 12px;
+    padding-left: 12px;
   }
   
   .navbar :global(.navbar-right) {
-    margin-right: 12px;
+    padding-right: 12px;
   }
   
   .greetingSection {
     padding-left: 12px;
+  }
+  
+  .calendarButtonContainer {
+    padding-right: 12px;
   }
 }
 
@@ -310,8 +319,8 @@
   align-items: center;
   justify-content: flex-start;
   margin-bottom: 12px;
-  padding: 0 4px;
   padding-left: 16px;
+  padding-right: 0;
 }
 
 .greetingSectionWithButton {
@@ -326,7 +335,8 @@
   display: flex;
   justify-content: flex-end;
   margin-bottom: 20px;
-  padding: 0 4px;
+  padding-left: 0;
+  padding-right: 16px;
 }
 
 .greetingEmoji {
