@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { getCurrentUser } from '../../../api/authApi';
 
 export type UserRole = 'teacher' | 'student';
 
@@ -43,32 +44,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Проверка токена при загрузке приложения
-    const token = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('user');
-    
-    if (token && storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+    const checkAuth = async () => {
+      // Проверяем авторизацию только через API с Telegram initData
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        const webApp = window.Telegram.WebApp;
+        const initData = (webApp as any).initData || 
+                         (webApp as any).initDataRaw ||
+                         new URLSearchParams(window.location.search).get('tgWebAppData');
+        
+        if (initData) {
+          try {
+            // Пытаемся получить информацию о пользователе через API
+            const currentUser = await getCurrentUser();
+            // Если пользователь найден, автоматически логиним
+            const contextUser = {
+              id: currentUser.id,
+              firstName: currentUser.firstName,
+              lastName: currentUser.lastName,
+              middleName: currentUser.middleName,
+              birthDate: currentUser.birthDate,
+              role: currentUser.role,
+              telegramId: currentUser.telegramId,
+              timezone: currentUser.timezone,
+            };
+            setUser(contextUser);
+          } catch (error) {
+            // Пользователь не зарегистрирован или ошибка - оставляем null
+            console.log('User not authenticated or not registered yet');
+          }
+        }
       }
-    }
-    
-    setIsLoading(false);
+      
+      setIsLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
-  const login = (userData: User, token: string) => {
+  const login = (userData: User, _token: string) => {
     setUser(userData);
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('user', JSON.stringify(userData));
+    // Не сохраняем в localStorage - используем только Telegram initData для авторизации
   };
 
   const logout = () => {
     setUser(null);
+    // Очищаем localStorage на всякий случай (если там что-то было)
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
   };
@@ -77,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      // Не сохраняем в localStorage - используем только Telegram initData
     }
   };
 

@@ -5,15 +5,16 @@ import { AcademicCapIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outlin
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import { timezones, getDefaultTimezone } from '../utils/timezones';
-import { login as authLogin, updateRole } from '../api/authApi';
+import { login as authLogin, updateRole, getCurrentUser } from '../api/authApi';
 import logo from '../assets/images/logo.png';
 import styles from './Login.module.css';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user: authUser, isAuthenticated } = useAuth();
   const { user: telegramUser, isTelegram } = useTelegram();
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [selectedRole, setSelectedRole] = useState<'teacher' | 'student' | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   
@@ -33,6 +34,62 @@ const LoginPage: React.FC = () => {
     birthDate: '',
     timezone: getDefaultTimezone(),
   });
+
+  // Проверка авторизации при загрузке страницы
+  useEffect(() => {
+    const checkExistingAuth = async () => {
+      // Если пользователь уже авторизован, перенаправляем на dashboard
+      if (isAuthenticated && authUser) {
+        if (authUser.role === 'teacher') {
+          navigate('/teacher/dashboard', { replace: true });
+        } else {
+          navigate('/student/dashboard', { replace: true });
+        }
+        return;
+      }
+
+      // Проверяем, зарегистрирован ли пользователь через API
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        const webApp = window.Telegram.WebApp;
+        const initData = (webApp as any).initData || 
+                         (webApp as any).initDataRaw ||
+                         new URLSearchParams(window.location.search).get('tgWebAppData');
+        
+        if (initData) {
+          try {
+            // Проверяем, зарегистрирован ли пользователь
+            const currentUser = await getCurrentUser();
+            // Если пользователь найден, автоматически логиним
+            const contextUser = {
+              id: currentUser.id,
+              firstName: currentUser.firstName,
+              lastName: currentUser.lastName,
+              middleName: currentUser.middleName,
+              birthDate: currentUser.birthDate,
+              role: currentUser.role,
+              telegramId: currentUser.telegramId,
+              timezone: currentUser.timezone,
+            };
+            login(contextUser, 'telegram-auth');
+            // Перенаправляем на dashboard
+            if (currentUser.role === 'teacher') {
+              navigate('/teacher/dashboard', { replace: true });
+            } else {
+              navigate('/student/dashboard', { replace: true });
+            }
+            return;
+          } catch (error) {
+            // Пользователь не зарегистрирован - показываем форму регистрации
+            console.log('User not registered, showing registration form');
+          }
+        }
+      }
+      
+      setIsCheckingAuth(false);
+    };
+
+    checkExistingAuth();
+  }, [isAuthenticated, authUser, navigate, login]);
 
   // Устанавливаем часовой пояс по умолчанию при открытии формы
   useEffect(() => {
@@ -153,6 +210,17 @@ const LoginPage: React.FC = () => {
       handleCloseForm();
     }
   };
+
+  // Показываем загрузку, пока проверяем авторизацию
+  if (isCheckingAuth) {
+    return (
+      <Page className={styles.page}>
+        <div className={styles.content} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <p className={styles.loginSubtitle}>Проверка авторизации...</p>
+        </div>
+      </Page>
+    );
+  }
 
   return (
     <Page className={styles.page}>

@@ -55,11 +55,7 @@ apiClient.interceptors.request.use(
       }
     }
 
-    // Также добавляем токен авторизации, если есть (для fallback)
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // Авторизация только через Telegram initData, без localStorage токена
 
     // Логирование для отладки (только в development)
     if (import.meta.env.DEV) {
