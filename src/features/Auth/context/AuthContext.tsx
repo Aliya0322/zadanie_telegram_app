@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = async (attemptNumber = 1) => {
       // Проверяем авторизацию через API с Telegram initData
       // Используем telegram_id из initDataUnsafe как надежный идентификатор
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -53,28 +53,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Получаем telegram_id из initDataUnsafe (всегда доступен в Telegram WebApp)
         const telegramId = webApp.initDataUnsafe?.user?.id;
         
-        // Получаем initData для отправки на бэкенд (может быть в разных местах)
-        const initData = (webApp as any).initData || 
-                         (webApp as any).initDataRaw ||
-                         new URLSearchParams(window.location.search).get('tgWebAppData') ||
-                         new URLSearchParams(window.location.search).get('_tgWebAppData');
-        
         // Логирование для отладки
         if (import.meta.env.DEV) {
-          console.log('[AuthContext] Checking authentication...', {
+          console.log(`[AuthContext] Checking authentication (attempt ${attemptNumber})...`, {
             hasTelegramWebApp: true,
             telegramId: telegramId || 'not found',
-            hasInitData: !!initData,
             platform: webApp.platform,
             version: webApp.version,
+            userAgent: navigator.userAgent,
           });
         }
         
-        // Если есть initData или telegram_id, пытаемся авторизоваться
-        if (initData || telegramId) {
+        // Если есть telegram_id, всегда пытаемся авторизоваться через API
+        // apiClient сам найдет initData через getTelegramInitData() из всех возможных источников
+        if (telegramId) {
           try {
             // Пытаемся получить информацию о пользователе через API
-            // API использует initData из заголовка X-Telegram-Init-Data
+            // apiClient автоматически добавит initData в заголовок X-Telegram-Init-Data
+            // если он доступен в любом из источников (webApp.initData, URL параметры и т.д.)
             const currentUser = await getCurrentUser();
             
             // Если пользователь найден, автоматически логиним
@@ -92,26 +88,71 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(contextUser);
             
             if (import.meta.env.DEV) {
-              console.log('[AuthContext] User authenticated:', {
+              console.log('[AuthContext] ✅ User authenticated successfully:', {
                 userId: contextUser.id,
                 telegramId: contextUser.telegramId,
                 role: contextUser.role,
+                attempt: attemptNumber,
               });
             }
-          } catch (error) {
+            
+            setIsLoading(false);
+            return;
+          } catch (error: any) {
             // Пользователь не зарегистрирован или ошибка
             if (import.meta.env.DEV) {
-              console.log('[AuthContext] User not authenticated or not registered yet:', error);
+              console.log(`[AuthContext] ❌ Auth attempt ${attemptNumber} failed:`, {
+                error: error?.message,
+                status: error?.response?.status,
+                statusText: error?.response?.statusText,
+              });
+            }
+            
+            // Если первая попытка не удалась и прошло меньше 2 секунд, пробуем еще раз
+            // (на случай медленной загрузки SDK или initData)
+            if (attemptNumber === 1) {
+              if (import.meta.env.DEV) {
+                console.log('[AuthContext] Retrying authentication in 500ms...');
+              }
+              
+              setTimeout(() => {
+                checkAuth(2);
+              }, 500);
+              return;
             }
           }
         } else {
-          if (import.meta.env.DEV) {
-            console.warn('[AuthContext] No initData and no telegram_id found');
+          // Если нет telegram_id, ждем немного и пробуем еще раз (SDK может загружаться)
+          if (attemptNumber === 1) {
+            if (import.meta.env.DEV) {
+              console.log('[AuthContext] No telegram_id yet, waiting for SDK...');
+            }
+            
+            setTimeout(() => {
+              checkAuth(2);
+            }, 500);
+            return;
+          } else {
+            if (import.meta.env.DEV) {
+              console.warn('[AuthContext] No telegram_id found after retry');
+            }
           }
         }
       } else {
-        if (import.meta.env.DEV) {
-          console.log('[AuthContext] Telegram WebApp not available');
+        // Если Telegram WebApp не доступен сразу, ждем и пробуем еще раз
+        if (attemptNumber === 1) {
+          if (import.meta.env.DEV) {
+            console.log('[AuthContext] Telegram WebApp not available yet, waiting...');
+          }
+          
+          setTimeout(() => {
+            checkAuth(2);
+          }, 500);
+          return;
+        } else {
+          if (import.meta.env.DEV) {
+            console.log('[AuthContext] Telegram WebApp not available after retry');
+          }
         }
       }
       
