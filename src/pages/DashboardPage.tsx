@@ -101,8 +101,13 @@ const DashboardPage = () => {
     e.preventDefault();
     
     if (!groupName.trim()) {
+      // Используем безопасную обертку для showAlert
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert('Пожалуйста, введите название группы');
+        try {
+          window.Telegram.WebApp.showAlert('Пожалуйста, введите название группы');
+        } catch (error) {
+          alert('Пожалуйста, введите название группы');
+        }
       } else {
         alert('Пожалуйста, введите название группы');
       }
@@ -120,7 +125,11 @@ const DashboardPage = () => {
       
       // Показываем уведомление об успехе
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert('Группа успешно создана!');
+        try {
+          window.Telegram.WebApp.showAlert('Группа успешно создана!');
+        } catch (error) {
+          alert('Группа успешно создана!');
+        }
       } else {
         alert('Группа успешно создана!');
       }
@@ -164,8 +173,14 @@ const DashboardPage = () => {
         errorMessage = 'Некорректные данные. Проверьте введенные данные.';
       }
       
+      // Используем безопасную обертку для showAlert
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert(errorMessage);
+        try {
+          window.Telegram.WebApp.showAlert(errorMessage);
+        } catch (error) {
+          console.warn('showAlert failed, using fallback:', error);
+          alert(errorMessage);
+        }
       } else {
         alert(errorMessage);
       }
