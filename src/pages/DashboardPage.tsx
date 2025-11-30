@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Page, Navbar, Block } from 'konsta/react';
-import { ArrowLeftIcon, ClockIcon, CalendarIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ClockIcon, CalendarIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import { createGroup } from '../api/groupsApi';
@@ -185,10 +185,6 @@ const DashboardPage = () => {
     } finally {
       setIsCreating(false);
     }
-  };
-
-  const handleBack = () => {
-    navigate(-1);
   };
 
   const handleLogout = () => {

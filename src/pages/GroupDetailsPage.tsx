@@ -65,16 +65,8 @@ const GroupDetailsPage = () => {
   }, [id]);
 
   useEffect(() => {
-    // Настройка MainButton Telegram для создания нового задания
-    if (webApp && activeTab === 'tasks') {
-      webApp.MainButton.setText('ВЫДАТЬ НОВОЕ ЗАДАНИЕ');
-      webApp.MainButton.show();
-      webApp.MainButton.onClick(() => {
-        if (id) {
-          navigate(`/groups/${id}/homework/new`);
-        }
-      });
-    } else if (webApp) {
+    // Скрываем MainButton Telegram на всех вкладках
+    if (webApp) {
       webApp.MainButton.hide();
     }
 
@@ -84,7 +76,7 @@ const GroupDetailsPage = () => {
         webApp.MainButton.hide();
       }
     };
-  }, [webApp, activeTab, id, navigate]);
+  }, [webApp]);
 
   const fetchGroup = async () => {
     if (!id) return;
