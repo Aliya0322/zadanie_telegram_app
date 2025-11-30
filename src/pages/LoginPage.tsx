@@ -133,50 +133,47 @@ const LoginPage: React.FC = () => {
   return (
     <Page className={styles.page}>
       <Navbar 
-        title="Вход в систему"
         className={styles.navbar}
       />
       
       <div className={styles.content}>
-        <div className={styles.loginCard}>
-          <div className={styles.logoContainer}>
-            <img src={logo} alt="Logo" className={styles.logo} />
-          </div>
-          <h1 className={styles.loginTitle}>Добро пожаловать!</h1>
-          <p className={styles.loginSubtitle}>
-            Выберите роль для входа в систему
-          </p>
+        <div className={styles.logoContainer}>
+          <img src={logo} alt="Logo" className={styles.logo} />
+        </div>
+        <h1 className={styles.loginTitle}>Добро пожаловать!</h1>
+        <p className={styles.loginSubtitle}>
+          Выберите роль для входа в систему
+        </p>
 
-          {isTelegram && telegramUser && (
-            <div className={styles.userInfo}>
-              <p className={styles.userInfoText}>
-                Привет, <strong>{telegramUser.firstName}</strong>!
-              </p>
-              <p className={styles.userInfoHint}>
-                Войдите как учитель или студент
-              </p>
-            </div>
-          )}
-
-          <div className={styles.buttonsContainer}>
-            <button
-              className={`${styles.loginButton} ${styles.loginButtonPrimary}`}
-              onClick={() => handleRoleSelect('teacher')}
-              disabled={isLoading || isFormOpen}
-            >
-              <AcademicCapIcon className={styles.buttonIcon} />
-              <span className={styles.buttonText}>Войти как учитель</span>
-            </button>
-            
-            <button
-              className={`${styles.loginButton} ${styles.loginButtonSecondary}`}
-              onClick={() => handleRoleSelect('student')}
-              disabled={isLoading || isFormOpen}
-            >
-              <UserIcon className={styles.buttonIcon} />
-              <span className={styles.buttonText}>Войти как студент</span>
-            </button>
+        {isTelegram && telegramUser && (
+          <div className={styles.userInfo}>
+            <p className={styles.userInfoText}>
+              Привет, <strong>{telegramUser.firstName}</strong>!
+            </p>
+            <p className={styles.userInfoHint}>
+              Войдите как учитель или студент
+            </p>
           </div>
+        )}
+
+        <div className={styles.buttonsContainer}>
+          <button
+            className={`${styles.loginButton} ${styles.loginButtonPrimary}`}
+            onClick={() => handleRoleSelect('teacher')}
+            disabled={isLoading || isFormOpen}
+          >
+            <AcademicCapIcon className={styles.buttonIcon} />
+            <span className={styles.buttonText}>Войти как учитель</span>
+          </button>
+          
+          <button
+            className={`${styles.loginButton} ${styles.loginButtonSecondary}`}
+            onClick={() => handleRoleSelect('student')}
+            disabled={isLoading || isFormOpen}
+          >
+            <UserIcon className={styles.buttonIcon} />
+            <span className={styles.buttonText}>Войти как студент</span>
+          </button>
         </div>
       </div>
 
