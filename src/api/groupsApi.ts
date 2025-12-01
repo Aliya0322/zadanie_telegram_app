@@ -65,7 +65,7 @@ export const getGroups = async (): Promise<GroupFrontend[]> => {
 
 // Получить группу по ID
 // API: GET /api/v1/groups/{group_id} где group_id - integer
-export const getGroupById = async (id: string | number): Promise<Group> => {
+export const getGroupById = async (id: string | number): Promise<GroupFrontend> => {
   // Логирование для отладки
   console.log('[getGroupById] Fetching group:', {
     id,

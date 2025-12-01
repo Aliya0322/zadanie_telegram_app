@@ -134,7 +134,6 @@ const DashboardPage = () => {
     try {
       const newGroupData: CreateGroupDto = {
         name: groupName.trim(),
-        meetingLink: groupMeetingLink.trim() || undefined,
       };
       
       const newGroup = await createGroup(newGroupData);
@@ -451,16 +450,11 @@ const DashboardPage = () => {
   
   // Фильтруем расписание на сегодня
   const today = new Date();
-  const todayDateString = today.toISOString().split('T')[0];
+  const todayDayOfWeekName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today.getDay()];
   const todaySchedule = dashboardData?.schedule?.filter(item => {
-    // Если есть конкретная дата - сравниваем
-    if (item.date) {
-      return item.date === todayDateString;
-    }
-    // Если указан день недели - проверяем
-    if (item.dayOfWeek !== undefined) {
-      const todayDayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; // Преобразуем воскресенье из 0 в 6
-      return item.dayOfWeek === todayDayOfWeek;
+    // Проверяем день недели (item.dayOfWeek это строка типа "monday", "tuesday" и т.д.)
+    if (item.dayOfWeek) {
+      return item.dayOfWeek.toLowerCase() === todayDayOfWeekName.toLowerCase();
     }
     return false;
   }) || [];

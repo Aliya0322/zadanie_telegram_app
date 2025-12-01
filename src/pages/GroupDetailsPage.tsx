@@ -457,9 +457,15 @@ const GroupDetailsPage = () => {
           throw new Error('Invalid schedule ID');
         }
 
+        // Преобразуем duration из строки в число для formToApi
+        const formDataWithNumberDuration = {
+          ...scheduleFormData,
+          duration: parseInt(scheduleFormData.duration, 10) || 90,
+        };
         const updateData = {
-          day_of_week: scheduleHelpers.formToApi(scheduleFormData, groupId).day_of_week,
-          time_at: scheduleHelpers.formToApi(scheduleFormData, groupId).time_at,
+          day_of_week: scheduleHelpers.formToApi(formDataWithNumberDuration, groupId).day_of_week,
+          time_at: scheduleHelpers.formToApi(formDataWithNumberDuration, groupId).time_at,
+          duration: scheduleHelpers.formToApi(formDataWithNumberDuration, groupId).duration,
           meeting_link: scheduleFormData.meetingLink || undefined,
         };
 
@@ -484,7 +490,12 @@ const GroupDetailsPage = () => {
         }
       } else {
         // Добавление нового элемента
-        const createData = scheduleHelpers.formToApi(scheduleFormData, groupId);
+        // Преобразуем duration из строки в число для formToApi
+        const formDataWithNumberDuration = {
+          ...scheduleFormData,
+          duration: parseInt(scheduleFormData.duration, 10) || 90,
+        };
+        const createData = scheduleHelpers.formToApi(formDataWithNumberDuration, groupId);
         const created = await createSchedule(createData);
         // Преобразуем ScheduleFrontend в формат для отображения
         const transformed = {
