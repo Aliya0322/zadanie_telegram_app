@@ -582,20 +582,6 @@ const DashboardPage = () => {
                 />
               </div>
               
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  Ссылка на Zoom или другой сайт (необязательно)
-                </label>
-                <input
-                  type="url"
-                  value={groupMeetingLink}
-                  onChange={(e) => setGroupMeetingLink(e.target.value)}
-                  placeholder="https://zoom.us/j/..."
-                  className={styles.formInput}
-                  disabled={isCreating}
-                />
-              </div>
-              
               <div className={styles.formActions}>
                 <button
                   type="button"
