@@ -351,17 +351,6 @@ const DashboardPage = () => {
         <div className={styles.greetingSection}>
           <span className={styles.greetingText}>Здравствуйте, {greetingName}!</span>
         </div>
-        
-        {/* Кнопка календаря - на уровень ниже, справа */}
-        <div className={styles.calendarButtonContainer}>
-          <button 
-            onClick={handleCalendarClick}
-            className={styles.calendarButton}
-          >
-            <CalendarIcon className={styles.calendarButtonIcon} />
-            Календарь
-          </button>
-        </div>
 
         {/* Сегодняшние занятия */}
         {!isLoading && (
@@ -372,6 +361,13 @@ const DashboardPage = () => {
                   <span className={styles.scheduleTitle}>
                     СЕГОДНЯ: {todaySchedule.length} {todaySchedule.length === 1 ? 'занятие' : todaySchedule.length < 5 ? 'занятия' : 'занятий'}
                   </span>
+                  <button 
+                    onClick={handleCalendarClick}
+                    className={styles.calendarButton}
+                  >
+                    <CalendarIcon className={styles.calendarButtonIcon} />
+                    Календарь
+                  </button>
                 </div>
                 
                 <div className={styles.scheduleList}>
@@ -388,9 +384,23 @@ const DashboardPage = () => {
                 </div>
               </>
             ) : (
-              <div className={styles.emptyText}>
-                Нет актуального расписания
-              </div>
+              <>
+                <div className={styles.scheduleHeader}>
+                  <span className={styles.scheduleTitle}>
+                    СЕГОДНЯ: 0 занятий
+                  </span>
+                  <button 
+                    onClick={handleCalendarClick}
+                    className={styles.calendarButton}
+                  >
+                    <CalendarIcon className={styles.calendarButtonIcon} />
+                    Календарь
+                  </button>
+                </div>
+                <div className={styles.emptyText}>
+                  Нет актуального расписания
+                </div>
+              </>
             )}
           </Block>
         )}

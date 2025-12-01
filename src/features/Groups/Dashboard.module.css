@@ -78,9 +78,6 @@
     padding-left: 12px;
   }
   
-  .calendarButtonContainer {
-    padding-right: 12px;
-  }
 }
 
 .navbarTitle {
@@ -362,13 +359,6 @@
   padding: 0 4px;
 }
 
-.calendarButtonContainer {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 20px;
-  padding-left: 0;
-  padding-right: 16px;
-}
 
 .greetingEmoji {
   font-size: 20px;
@@ -408,6 +398,7 @@
 .scheduleHeader {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 16px;
 }
 
