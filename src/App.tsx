@@ -25,6 +25,9 @@ const LoadingFallback: React.FC = () => (
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
+  // Режим разработки: проверяем query параметр ?dev=true для обхода защиты
+  const isDevMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get('dev') === 'true';
+
   // Логирование для отладки
   if (import.meta.env.DEV) {
     console.log('[ProtectedRoute] Check:', {
@@ -32,7 +35,15 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
       isAuthenticated,
       hasUser: !!user,
       userId: user?.id,
+      isDevMode,
     });
+  }
+
+  // В режиме разработки с ?dev=true пропускаем защиту
+  if (isDevMode) {
+    console.log('[ProtectedRoute] 🔧 Dev mode enabled, bypassing authentication');
+    console.log('[ProtectedRoute] 💡 To access protected routes in dev, add ?dev=true to URL');
+    return <>{children}</>;
   }
 
   if (isLoading) {

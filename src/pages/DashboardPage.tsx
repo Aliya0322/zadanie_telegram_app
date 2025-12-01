@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Page, Navbar, Block } from 'konsta/react';
-import { ClockIcon, CalendarIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ClockIcon, CalendarIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import { createGroup } from '../api/groupsApi';
@@ -198,6 +198,12 @@ const DashboardPage = () => {
     navigate('/login');
   };
 
+  const handleSettings = () => {
+    // TODO: Открыть настройки
+    console.log('Settings clicked');
+    // Можно добавить модальное окно с настройками или переход на страницу настроек
+  };
+
 
   const handleCalendarClick = () => {
     setIsCalendarOpen(true);
@@ -333,11 +339,13 @@ const DashboardPage = () => {
   return (
     <Page className={styles.page}>
       <Navbar 
-        title="Мой Кабинет"
-        left={<div style={{ width: 0 }}></div>}
+        title=""
+        left={
+          <span className={styles.cabinetTitle}>Мой Кабинет</span>
+        }
         right={
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            Выйти
+          <button onClick={handleSettings} className={styles.settingsButton}>
+            <Cog6ToothIcon className={styles.settingsIcon} />
           </button>
         }
         className={styles.navbar}
