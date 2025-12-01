@@ -7,6 +7,7 @@ export interface Group {
   teacherId: string;
   students?: string[];
   inviteToken?: string;
+  status?: 'active' | 'paused';
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +26,7 @@ const transformGroup = (apiData: any): Group => ({
   teacherId: String(apiData.teacher_id || apiData.teacherId || ''),
   students: apiData.students || undefined,
   inviteToken: apiData.invite_code || apiData.inviteToken || undefined,
+  status: apiData.status || 'active',
   createdAt: apiData.created_at || apiData.createdAt || '',
   updatedAt: apiData.updated_at || apiData.updatedAt || '',
 });
@@ -140,6 +142,18 @@ export const updateGroup = async (id: string, data: Partial<CreateGroupDto>): Pr
 // Удалить группу
 export const deleteGroup = async (id: string): Promise<void> => {
   await apiClient.delete(`/groups/${id}`);
+};
+
+// Приостановить группу
+export const pauseGroup = async (id: string): Promise<Group> => {
+  const response = await apiClient.post<any>(`/groups/${id}/pause`);
+  return transformGroup(response.data);
+};
+
+// Возобновить группу
+export const resumeGroup = async (id: string): Promise<Group> => {
+  const response = await apiClient.post<any>(`/groups/${id}/resume`);
+  return transformGroup(response.data);
 };
 
 // Добавить студента в группу

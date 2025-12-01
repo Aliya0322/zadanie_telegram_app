@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+аimport { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Page, Navbar } from 'konsta/react';
 import { 
@@ -17,7 +17,7 @@ import {
   ChevronUpIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
-import { getGroupById } from '../api/groupsApi';
+import { getGroupById, updateGroup, deleteGroup, pauseGroup, resumeGroup } from '../api/groupsApi';
 import type { Group } from '../api/groupsApi';
 import { useTelegram } from '../hooks/useTelegram';
 import { useHomework } from '../features/Homework/hooks/useHomework';
@@ -66,6 +66,11 @@ const GroupDetailsPage = () => {
     duration: '90',
     meetingLink: ''
   });
+  const [isGroupSettingsOpen, setIsGroupSettingsOpen] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const { fetchHomework, create, update, remove, homework } = useHomework(id || undefined);
 
   useEffect(() => {
@@ -75,6 +80,12 @@ const GroupDetailsPage = () => {
       fetchSchedule();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (group) {
+      setGroupName(group.name);
+    }
+  }, [group]);
 
   const fetchSchedule = async () => {
     if (!id) return;
@@ -166,8 +177,150 @@ const GroupDetailsPage = () => {
   };
 
   const handleMenu = () => {
-    console.log('Открыть меню');
-    // TODO: Open menu
+    if (group) {
+      setGroupName(group.name);
+      setIsGroupSettingsOpen(true);
+    }
+  };
+
+  const handleCloseGroupSettings = () => {
+    setIsGroupSettingsOpen(false);
+  };
+
+  const handleSaveGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !groupName.trim()) return;
+
+    setIsSaving(true);
+    try {
+      const updatedGroup = await updateGroup(id, { name: groupName.trim() });
+      setGroup(updatedGroup);
+      setIsGroupSettingsOpen(false);
+
+      if (window.Telegram?.WebApp) {
+        try {
+          window.Telegram.WebApp.showAlert('Название группы успешно обновлено!');
+        } catch (error) {
+          alert('Название группы успешно обновлено!');
+        }
+      } else {
+        alert('Название группы успешно обновлено!');
+      }
+    } catch (error: any) {
+      console.error('Error updating group:', error);
+      let errorMessage = 'Ошибка при обновлении группы. Попробуйте снова.';
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      if (window.Telegram?.WebApp) {
+        try {
+          window.Telegram.WebApp.showAlert(errorMessage);
+        } catch (alertError) {
+          alert(errorMessage);
+        }
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleToggleGroupStatus = async () => {
+    if (!id || !group) return;
+
+    setIsTogglingStatus(true);
+    try {
+      const updatedGroup = group.status === 'paused' 
+        ? await resumeGroup(id)
+        : await pauseGroup(id);
+      setGroup(updatedGroup);
+
+      const statusMessage = updatedGroup.status === 'paused' 
+        ? 'Группа приостановлена'
+        : 'Группа возобновлена';
+
+      if (window.Telegram?.WebApp) {
+        try {
+          window.Telegram.WebApp.showAlert(statusMessage);
+        } catch (error) {
+          alert(statusMessage);
+        }
+      } else {
+        alert(statusMessage);
+      }
+    } catch (error: any) {
+      console.error('Error toggling group status:', error);
+      let errorMessage = 'Ошибка при изменении статуса группы. Попробуйте снова.';
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      if (window.Telegram?.WebApp) {
+        try {
+          window.Telegram.WebApp.showAlert(errorMessage);
+        } catch (alertError) {
+          alert(errorMessage);
+        }
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsTogglingStatus(false);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!id) return;
+
+    const confirmMessage = 'Вы уверены, что хотите удалить эту группу? Это действие нельзя отменить.';
+    const confirmed = typeof window !== 'undefined' && window.Telegram?.WebApp 
+      ? await new Promise<boolean>((resolve) => {
+          try {
+            window.Telegram!.WebApp.showConfirm(confirmMessage, (confirmed) => {
+              resolve(confirmed);
+            });
+          } catch {
+            resolve(window.confirm(confirmMessage));
+          }
+        })
+      : window.confirm(confirmMessage);
+
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteGroup(id);
+      navigate('/teacher/dashboard');
+    } catch (error: any) {
+      console.error('Error deleting group:', error);
+      let errorMessage = 'Ошибка при удалении группы. Попробуйте снова.';
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      if (window.Telegram?.WebApp) {
+        try {
+          window.Telegram.WebApp.showAlert(errorMessage);
+        } catch (alertError) {
+          alert(errorMessage);
+        }
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleCopyInviteLink = () => {
@@ -1173,6 +1326,86 @@ const GroupDetailsPage = () => {
           </div>
         );
       })()}
+
+      {/* Модальное окно настроек группы */}
+      {isGroupSettingsOpen && group && (
+        <div className={styles.calendarModal} onClick={handleCloseGroupSettings}>
+          <div className={styles.calendarModalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.createGroupHeader}>
+              <h2 className={styles.createGroupTitle}>Настройки группы</h2>
+              <button onClick={handleCloseGroupSettings} className={styles.createGroupCloseButton}>
+                <XMarkIcon className={styles.calendarCloseIcon} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveGroup} className={styles.createGroupForm}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Название группы <span className={styles.requiredStar}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  className={styles.formInput}
+                  placeholder="Введите название группы"
+                  required
+                  disabled={isSaving || isDeleting || isTogglingStatus}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Статус группы
+                </label>
+                <button
+                  type="button"
+                  onClick={handleToggleGroupStatus}
+                  className={styles.formStatusButton}
+                  disabled={isSaving || isDeleting || isTogglingStatus}
+                >
+                  {isTogglingStatus 
+                    ? 'Изменение...' 
+                    : group.status === 'paused' 
+                      ? 'Возобновить группу' 
+                      : 'Приостановить группу'}
+                </button>
+                {group.status === 'paused' && (
+                  <p className={styles.statusHint}>Группа приостановлена</p>
+                )}
+              </div>
+
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  onClick={handleDeleteGroup}
+                  className={styles.formDeleteButton}
+                  disabled={isSaving || isDeleting || isTogglingStatus}
+                >
+                  {isDeleting ? 'Удаление...' : 'Удалить группу'}
+                </button>
+                <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+                  <button
+                    type="button"
+                    onClick={handleCloseGroupSettings}
+                    className={styles.formCancelButton}
+                    disabled={isSaving || isDeleting || isTogglingStatus}
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    className={styles.formSubmitButton}
+                    disabled={isSaving || isDeleting || isTogglingStatus || !groupName.trim()}
+                  >
+                    {isSaving ? 'Сохранение...' : 'Сохранить'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Page>
   );
 };

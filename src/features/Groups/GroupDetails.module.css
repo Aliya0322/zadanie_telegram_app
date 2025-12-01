@@ -502,12 +502,14 @@ select.formInput {
 
 .formActions {
   display: flex;
+  flex-direction: column;
   gap: 12px;
   margin-top: 24px;
 }
 
 .formCancelButton,
-.formSubmitButton {
+.formSubmitButton,
+.formDeleteButton {
   flex: 1;
   padding: 12px 24px;
   border: none;
@@ -516,6 +518,54 @@ select.formInput {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.formDeleteButton {
+  background-color: #ef4444;
+  color: white;
+  margin-bottom: 12px;
+  width: 100%;
+  flex: none;
+}
+
+.formDeleteButton:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+.formDeleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.formStatusButton {
+  width: 100%;
+  padding: 12px 24px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: white;
+  color: #1f2937;
+}
+
+.formStatusButton:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.formStatusButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.statusHint {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 
 .formCancelButton {
@@ -1041,6 +1091,102 @@ select.formInput {
 
 .greenStatus {
   color: #10b981;
+}
+
+/* Модальное окно настроек группы */
+.calendarModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .calendarModal {
+    padding: 16px;
+    align-items: center;
+  }
+}
+
+.calendarModalContent {
+  background-color: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .calendarModalContent {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 16px;
+  }
+}
+
+.createGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.createGroupTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  flex: 1;
+}
+
+.createGroupCloseButton {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s;
+  z-index: 10;
+  border-radius: 8px;
+  margin-left: 12px;
+}
+
+.createGroupCloseButton:hover {
+  color: #1f2937;
+  background-color: #f3f4f6;
+}
+
+.createGroupForm {
+  padding: 16px 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.calendarCloseIcon {
+  width: 24px;
+  height: 24px;
 }
 
 /* Адаптивность для больших экранов */
