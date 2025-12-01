@@ -99,7 +99,14 @@ const GroupDetailsPage = () => {
     setIsLoadingSchedule(true);
     try {
       const schedules = await getScheduleByGroup(groupId);
-      const transformed = schedules.map(schedule => scheduleHelpers.apiToDisplay(schedule));
+      // Преобразуем ScheduleFrontend в формат для отображения
+      const transformed = schedules.map(schedule => ({
+        id: schedule.id,
+        dayOfWeek: schedule.dayOfWeek,
+        startTime: schedule.timeAt,
+        duration: schedule.duration || 90,
+        meetingLink: schedule.meetingLink,
+      }));
       setScheduleItems(transformed);
       console.log('[fetchSchedule] ✅ Schedule fetched successfully:', transformed);
     } catch (err: any) {
@@ -457,7 +464,14 @@ const GroupDetailsPage = () => {
         };
 
         const updated = await updateSchedule(scheduleId, updateData);
-        const transformed = scheduleHelpers.apiToDisplay(updated);
+        // Преобразуем ScheduleFrontend в формат для отображения
+        const transformed = {
+          id: updated.id,
+          dayOfWeek: updated.dayOfWeek,
+          startTime: updated.timeAt,
+          duration: updated.duration || 90,
+          meetingLink: updated.meetingLink,
+        };
         
         setScheduleItems(prev => prev.map(item => 
           item.id === editingScheduleId ? transformed : item
@@ -472,7 +486,14 @@ const GroupDetailsPage = () => {
         // Добавление нового элемента
         const createData = scheduleHelpers.formToApi(scheduleFormData, groupId);
         const created = await createSchedule(createData);
-        const transformed = scheduleHelpers.apiToDisplay(created);
+        // Преобразуем ScheduleFrontend в формат для отображения
+        const transformed = {
+          id: created.id,
+          dayOfWeek: created.dayOfWeek,
+          startTime: created.timeAt,
+          duration: created.duration || 90,
+          meetingLink: created.meetingLink,
+        };
         
         setScheduleItems(prev => [...prev, transformed]);
 
@@ -544,7 +565,7 @@ const GroupDetailsPage = () => {
     if (homeworkId) {
       const homeworkItem = homework.find(hw => hw.id === homeworkId);
       if (homeworkItem) {
-        setHomeworkTitle(homeworkItem.title);
+        setHomeworkTitle(homeworkItem.description); // Используем description вместо title
         setHomeworkDescription(homeworkItem.description);
         // Преобразуем ISO дату в формат YYYY-MM-DD для input type="date"
         const dueDate = new Date(homeworkItem.dueDate);
@@ -620,9 +641,8 @@ const GroupDetailsPage = () => {
     setIsCreatingHomework(true);
     try {
       const homeworkData: CreateHomeworkDto = {
-        title: homeworkTitle.trim(),
         description: homeworkDescription.trim(),
-        groupId: id,
+        groupId: id || '',
         dueDate: new Date(homeworkDueDate).toISOString(),
       };
       
@@ -761,7 +781,7 @@ const GroupDetailsPage = () => {
                       <div key={task.id} className={styles.pastHomeworkCard}>
                         <DocumentTextIcon className={`${styles.pastHomeworkIcon} ${isPast ? styles.iconGray : styles.iconBlue}`} />
                         <div className={`${styles.pastHomeworkContent} ${styles.flexContent}`}>
-                          <div className={styles.pastHomeworkTitle}>{task.title}</div>
+                          <div className={styles.pastHomeworkTitle}>{task.description}</div>
                           <div className={styles.pastHomeworkStatus}>
                             Дедлайн: {formattedDate}
                           </div>
@@ -1300,7 +1320,7 @@ const GroupDetailsPage = () => {
               
               <div className={styles.deleteModalBody}>
                 <p className={styles.deleteModalText}>
-                  Вы действительно хотите удалить задание <strong>"{homeworkItem.title}"</strong>?
+                  Вы действительно хотите удалить задание <strong>"{homeworkItem.description}"</strong>?
                 </p>
                 <p className={styles.deleteModalWarning}>
                   Это действие нельзя отменить.

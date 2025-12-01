@@ -87,27 +87,23 @@ const StudentDashboardPage = () => {
       // В реальном приложении здесь будет API для получения заданий студента
       // Пока используем моковые данные
       // Моковые данные с файлами (в реальном приложении файлы будут приходить с API)
-      const mockHomework: (Homework & { files?: string[] })[] = [
+      const mockHomework: (HomeworkFrontend & { files?: string[] })[] = [
         {
           id: 'hw1',
-          title: 'Квадратные уравнения',
-          description: 'Решить номера №124, 125, 128 из учебника',
+          description: 'Квадратные уравнения: Решить номера №124, 125, 128 из учебника',
           groupId: '1',
-          teacherId: 'teacher1',
           dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // через 2 дня
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          reminderSent: false,
           files: ['Учебник_стр_45.pdf', 'Дополнительные_задачи.docx'],
         },
         {
           id: 'hw2',
-          title: 'Тригонометрия',
-          description: 'Выполнить упражнения на стр. 45',
+          description: 'Тригонометрия: Выполнить упражнения на стр. 45',
           groupId: '2',
-          teacherId: 'teacher1',
           dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // через 5 дней
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          reminderSent: false,
           files: ['Тригонометрия_задачи.pdf'],
         },
       ];
@@ -239,7 +235,7 @@ const StudentDashboardPage = () => {
                     <div className={styles.groupCardContent}>
                       <DocumentTextIcon className={`${styles.groupIcon} ${styles.homeworkIcon}`} />
                       <div className={`${styles.groupInfo} ${styles.flexInfo}`}>
-                        <div className={styles.groupName}>{homework.title}</div>
+                        <div className={styles.groupName}>{homework.description}</div>
                         <div className={`${styles.groupMeta} ${styles.columnMeta}`}>
                           <div className={styles.descriptionText}>
                             {homework.description}
@@ -284,7 +280,7 @@ const StudentDashboardPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.homeworkModalHeader}>
-              <h2 className={styles.homeworkModalTitle}>{selectedHomework.title}</h2>
+              <h2 className={styles.homeworkModalTitle}>{selectedHomework.description}</h2>
               <button 
                 onClick={() => {
                   setIsHomeworkModalOpen(false);

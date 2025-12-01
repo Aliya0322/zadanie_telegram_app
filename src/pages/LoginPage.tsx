@@ -5,7 +5,7 @@ import { AcademicCapIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outlin
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import { timezones, getDefaultTimezone } from '../utils/timezones';
-import { login as authLogin, getCurrentUser, type UpdateRoleRequest } from '../api/authApi';
+import { login as authLogin, getCurrentUser, type UpdateRoleRequest, type UserFrontend } from '../api/authApi';
 import logo from '../assets/images/logo.png';
 import styles from './Login.module.css';
 
@@ -77,15 +77,18 @@ const LoginPage: React.FC = () => {
             const finalTelegramId = currentUser.telegramId || telegramId?.toString();
             
             // Если пользователь найден, автоматически логиним
-            const contextUser = {
+            // currentUser уже является UserFrontend, можно использовать напрямую
+            const contextUser: UserFrontend = {
               id: currentUser.id,
               firstName: currentUser.firstName,
               lastName: currentUser.lastName,
               middleName: currentUser.middleName,
               birthDate: currentUser.birthDate,
               role: currentUser.role,
-              telegramId: finalTelegramId, // Используем telegramId из initDataUnsafe если API не вернул
+              telegramId: finalTelegramId || currentUser.telegramId, // Используем telegramId из initDataUnsafe если API не вернул
               timezone: currentUser.timezone,
+              isActive: currentUser.isActive,
+              createdAt: currentUser.createdAt,
             };
             
             console.log('[LoginPage] Calling login() to set user in context...');
@@ -219,18 +222,19 @@ const LoginPage: React.FC = () => {
         message: loginResponse.message,
       });
       
-      // Сохраняем пользователя в контекст (преобразуем в формат AuthContext)
-      const contextUser = {
-        id: loginResponse.user.id,
-        firstName: loginResponse.user.firstName,
-        lastName: loginResponse.user.lastName,
-        middleName: loginResponse.user.middleName,
-        birthDate: loginResponse.user.birthDate,
+      // loginResponse.user это User (бэкенд тип), но authLogin возвращает UserFrontend
+      // Преобразуем User в UserFrontend для контекста
+      const contextUser: UserFrontend = {
+        id: String(loginResponse.user.id),
+        firstName: loginResponse.user.first_name || '',
+        lastName: loginResponse.user.last_name || '',
+        middleName: loginResponse.user.patronymic || undefined,
+        birthDate: loginResponse.user.birthdate || undefined,
         role: loginResponse.user.role,
-        telegramId: loginResponse.user.telegramId,
-        timezone: loginResponse.user.timezone,
-        isActive: loginResponse.user.isActive,
-        createdAt: loginResponse.user.createdAt,
+        telegramId: String(loginResponse.user.tg_id),
+        timezone: loginResponse.user.timezone || 'UTC',
+        isActive: loginResponse.user.is_active,
+        createdAt: loginResponse.user.created_at,
       };
       // Бэкенд не использует токены, авторизация через Telegram initData
       login(contextUser, '');
