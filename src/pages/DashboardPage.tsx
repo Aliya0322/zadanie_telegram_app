@@ -575,7 +575,7 @@ const DashboardPage = () => {
                   type="text"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="Например: Математика, ОГЭ (Группа А)"
+                  placeholder="Например: Математика, ОГЭ"
                   className={styles.formInput}
                   required
                   disabled={isCreating}

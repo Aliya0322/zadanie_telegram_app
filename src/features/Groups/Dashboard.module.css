@@ -750,10 +750,18 @@
 .calendarHeader {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px;
-  padding-top: 60px;
+  justify-content: space-between;
+  padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.calendarTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  flex: 1;
 }
 
 .calendarMonthYearContainer {
@@ -803,9 +811,7 @@
 }
 
 .calendarCloseButton {
-  position: absolute;
-  top: 16px;
-  right: 16px;
+  position: static;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -817,6 +823,7 @@
   transition: color 0.2s;
   z-index: 10;
   border-radius: 8px;
+  margin-left: 12px;
 }
 
 .calendarCloseButton:hover {
@@ -936,7 +943,7 @@
 
 /* Форма создания группы */
 .createGroupForm {
-  padding: 20px;
+  padding: 16px 20px;
   box-sizing: border-box;
   overflow-y: auto;
   flex: 1;
