@@ -559,9 +559,9 @@ const DashboardPage = () => {
       {isCreateGroupOpen && (
         <div className={styles.calendarModal} onClick={handleCloseCreateGroup}>
           <div className={styles.calendarModalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.calendarHeader}>
-              <h2 className={styles.calendarTitle}>Создать новую группу</h2>
-              <button onClick={handleCloseCreateGroup} className={styles.calendarCloseButton}>
+            <div className={styles.createGroupHeader}>
+              <h2 className={styles.createGroupTitle}>Создать новую группу</h2>
+              <button onClick={handleCloseCreateGroup} className={styles.createGroupCloseButton}>
                 <XMarkIcon className={styles.calendarCloseIcon} />
               </button>
             </div>
