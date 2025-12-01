@@ -384,23 +384,9 @@ const DashboardPage = () => {
                 </div>
               </>
             ) : (
-              <>
-                <div className={styles.scheduleHeader}>
-                  <span className={styles.scheduleTitle}>
-                    СЕГОДНЯ: 0 занятий
-                  </span>
-                  <button 
-                    onClick={handleCalendarClick}
-                    className={styles.calendarButton}
-                  >
-                    <CalendarIcon className={styles.calendarButtonIcon} />
-                    Календарь
-                  </button>
-                </div>
-                <div className={styles.emptyText}>
-                  Нет актуального расписания
-                </div>
-              </>
+              <div className={styles.emptyText}>
+                Нет актуального расписания
+              </div>
             )}
           </Block>
         )}
