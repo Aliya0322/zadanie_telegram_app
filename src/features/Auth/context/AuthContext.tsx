@@ -92,15 +92,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
             
             // Если пользователь найден, автоматически логиним
-            const contextUser = {
+            // currentUser уже является UserFrontend, убеждаемся что все поля присутствуют
+            const contextUser: UserFrontend = {
               id: currentUser.id,
               firstName: currentUser.firstName,
               lastName: currentUser.lastName,
               middleName: currentUser.middleName,
               birthDate: currentUser.birthDate,
               role: currentUser.role,
-              telegramId: finalTelegramId, // Используем telegramId из initDataUnsafe если API не вернул
-              timezone: currentUser.timezone,
+              telegramId: finalTelegramId || currentUser.telegramId || '', // Используем telegramId из initDataUnsafe если API не вернул
+              timezone: currentUser.timezone || 'UTC',
+              isActive: currentUser.isActive ?? true,
+              createdAt: currentUser.createdAt || new Date().toISOString(),
             };
             
             // Устанавливаем пользователя в состояние

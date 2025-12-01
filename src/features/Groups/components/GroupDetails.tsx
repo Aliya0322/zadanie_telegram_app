@@ -18,7 +18,7 @@ const GroupDetails: React.FC<GroupDetailsProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <CustomCard title={group.name} subtitle={group.description}>
+      <CustomCard title={group.name}>
         <div className="space-y-3">
           <div>
             <p className="text-sm font-medium text-gray-700">ID группы:</p>

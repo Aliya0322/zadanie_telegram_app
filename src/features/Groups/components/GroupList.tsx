@@ -36,7 +36,6 @@ const GroupList: React.FC<GroupListProps> = ({ groups, onGroupClick, isLoading =
         <CustomCard
           key={group.id}
           title={group.name}
-          subtitle={group.description}
           onClick={() => onGroupClick(group)}
           className="hover:shadow-md transition-shadow"
         >

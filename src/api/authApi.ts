@@ -28,8 +28,16 @@ export interface UserFrontend {
   createdAt: string;
 }
 
-export interface LoginResponse {
+// LoginResponse из бэкенда (с User в snake_case)
+export interface LoginResponseBackend {
   user: User;
+  is_new_user: boolean;
+  message: string;
+}
+
+// LoginResponse для фронтенда (с UserFrontend)
+export interface LoginResponse {
+  user: UserFrontend;
   is_new_user: boolean;
   message: string;
 }
@@ -79,7 +87,7 @@ export const login = async (registrationData?: UpdateRoleRequest): Promise<Login
     }
   }
   
-  const response = await apiClient.post<LoginResponse>('/auth/login', Object.keys(requestData).length > 0 ? requestData : undefined);
+  const response = await apiClient.post<LoginResponseBackend>('/auth/login', Object.keys(requestData).length > 0 ? requestData : undefined);
   // Преобразуем ответ API из snake_case в camelCase для фронтенда
   const apiData = response.data;
   const transformUser = (userData: User): UserFrontend => ({
@@ -95,11 +103,13 @@ export const login = async (registrationData?: UpdateRoleRequest): Promise<Login
     createdAt: userData.created_at,
   });
   
-  return {
+  const result: LoginResponse = {
     user: transformUser(apiData.user),
     is_new_user: apiData.is_new_user,
     message: apiData.message,
   };
+  
+  return result;
 };
 
 // Получить информацию о текущем пользователе

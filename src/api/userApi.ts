@@ -1,7 +1,6 @@
 import apiClient from './apiClient';
-import type { Group, GroupFrontend } from './groupsApi';
+import type { GroupFrontend } from './groupsApi';
 import type { Homework, HomeworkFrontend } from './homeworkApi';
-import { transformGroup } from './groupsApi';
 import { transformHomework } from './homeworkApi';
 
 // Интерфейсы соответствуют бэкенд схемам из Pydantic

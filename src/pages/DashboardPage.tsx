@@ -44,7 +44,6 @@ const DashboardPage = () => {
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
-  const [groupMeetingLink, setGroupMeetingLink] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,7 +99,6 @@ const DashboardPage = () => {
   const handleCloseCreateGroup = () => {
     setIsCreateGroupOpen(false);
     setGroupName('');
-    setGroupMeetingLink('');
   };
 
   // Обновление списка групп после создания новой
