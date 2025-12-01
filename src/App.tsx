@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './features/Auth/context/AuthContext';
 import { GroupProvider } from './features/Groups/context/GroupContext';
+import logo from './assets/images/logo.png';
+import './App.css';
 
 // Lazy loading для всех страниц
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -10,12 +12,11 @@ const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
 const GroupDetailsPage = lazy(() => import('./pages/GroupDetailsPage'));
 const NewHomeworkPage = lazy(() => import('./pages/NewHomeworkPage'));
 
-// Компонент загрузки
+// Компонент загрузки с анимированным логотипом
 const LoadingFallback: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
     <div className="text-center">
-      <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-      <p className="text-gray-500">Загрузка...</p>
+      <img src={logo} alt="Logo" className="loading-logo" />
     </div>
   </div>
 );
@@ -36,8 +37,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Загрузка...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <img src={logo} alt="Logo" className="loading-logo" />
+        </div>
       </div>
     );
   }
@@ -57,8 +60,10 @@ const RoleBasedDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Загрузка...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <img src={logo} alt="Logo" className="loading-logo" />
+        </div>
       </div>
     );
   }

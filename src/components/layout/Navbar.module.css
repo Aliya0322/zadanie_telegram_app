@@ -33,7 +33,7 @@
 
 .leftSection {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .leftContent {

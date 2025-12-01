@@ -298,7 +298,9 @@ const LoginPage: React.FC = () => {
     return (
       <Page className={styles.page}>
         <div className={styles.content} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <p className={styles.loginSubtitle}>Проверка авторизации...</p>
+          <div className={styles.logoContainer}>
+            <img src={logo} alt="Logo" className={`${styles.logo} ${styles.logoLoading}`} />
+          </div>
         </div>
       </Page>
     );
