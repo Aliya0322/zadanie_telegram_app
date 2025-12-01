@@ -993,6 +993,10 @@
   margin-bottom: 8px;
 }
 
+.requiredStar {
+  color: #ef4444;
+}
+
 .formInput,
 .formTextarea {
   width: 100%;
@@ -1027,14 +1031,47 @@
   min-height: 80px;
 }
 
+.formSelect {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #1f2937;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.formSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.formSelect:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .formActions {
   display: flex;
+  flex-direction: column;
   gap: 12px;
   margin-top: 24px;
 }
 
 .formCancelButton,
-.formSubmitButton {
+.formSubmitButton,
+.formDeleteButton {
   flex: 1;
   padding: 12px 24px;
   border: none;
@@ -1043,6 +1080,23 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.formDeleteButton {
+  background-color: #ef4444;
+  color: white;
+  margin-bottom: 12px;
+  width: 100%;
+  flex: none;
+}
+
+.formDeleteButton:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+.formDeleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .formCancelButton {

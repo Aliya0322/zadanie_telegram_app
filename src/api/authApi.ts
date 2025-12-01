@@ -136,3 +136,45 @@ export const updateRole = async (data: UpdateRoleRequest): Promise<User> => {
   };
 };
 
+// Обновить профиль пользователя
+export const updateProfile = async (data: UpdateRoleRequest): Promise<User> => {
+  // Конвертируем camelCase в snake_case для бэкенда
+  const requestData: any = {};
+  
+  if (data.firstName !== undefined) {
+    requestData.first_name = data.firstName;
+  }
+  if (data.lastName !== undefined) {
+    requestData.last_name = data.lastName;
+  }
+  if (data.middleName !== undefined) {
+    requestData.patronymic = data.middleName;
+  }
+  if (data.birthDate !== undefined) {
+    requestData.birth_date = data.birthDate;
+  }
+  if (data.timezone !== undefined) {
+    requestData.timezone = data.timezone;
+  }
+  
+  const response = await apiClient.put<any>('/auth/me', requestData);
+  const apiData = response.data;
+  return {
+    id: String(apiData.id || ''),
+    telegramId: String(apiData.tg_id || apiData.telegramId || ''),
+    firstName: apiData.first_name || '',
+    lastName: apiData.last_name || '',
+    middleName: apiData.patronymic || apiData.middle_name || undefined,
+    role: apiData.role || 'student',
+    birthDate: apiData.birthdate || apiData.birth_date || undefined,
+    timezone: apiData.timezone || undefined,
+    createdAt: apiData.created_at || undefined,
+    updatedAt: apiData.updated_at || undefined,
+  };
+};
+
+// Удалить профиль пользователя
+export const deleteProfile = async (): Promise<void> => {
+  await apiClient.delete('/auth/me');
+};
+

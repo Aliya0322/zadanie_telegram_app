@@ -8,6 +8,8 @@ import { createGroup } from '../api/groupsApi';
 import type { CreateGroupDto } from '../api/groupsApi';
 import { getDashboard } from '../api/userApi';
 import type { DashboardData } from '../api/userApi';
+import { updateProfile, deleteProfile } from '../api/authApi';
+import { timezones, getDefaultTimezone } from '../utils/timezones';
 // Импорт модульных стилей
 import styles from '../features/Groups/Dashboard.module.css';
 
@@ -34,7 +36,7 @@ const mockScheduleByDate: Record<string, Array<{ time: string; title: string; gr
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { user: telegramUser } = useTelegram();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -46,6 +48,16 @@ const DashboardPage = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    middleName: user?.middleName || '',
+    birthDate: user?.birthDate || '',
+    timezone: user?.timezone || getDefaultTimezone(),
+  });
   
   // Получение имени пользователя для приветствия
   // Для учителя: только имя и отчество (без фамилии)
@@ -194,9 +206,118 @@ const DashboardPage = () => {
   };
 
   const handleSettings = () => {
-    // TODO: Открыть настройки
-    console.log('Settings clicked');
-    // Можно добавить модальное окно с настройками или переход на страницу настроек
+    if (user) {
+      setProfileForm({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        middleName: user.middleName || '',
+        birthDate: user.birthDate || '',
+        timezone: user.timezone || getDefaultTimezone(),
+      });
+      setIsSettingsOpen(true);
+    }
+  };
+
+  const handleCloseSettings = () => {
+    setIsSettingsOpen(false);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setIsSaving(true);
+    try {
+      const updatedUser = await updateProfile({
+        role: user.role,
+        firstName: profileForm.firstName.trim(),
+        lastName: profileForm.lastName.trim(),
+        middleName: profileForm.middleName.trim() || undefined,
+        birthDate: profileForm.birthDate || undefined,
+        timezone: profileForm.timezone,
+      });
+
+      updateUser(updatedUser);
+      setIsSettingsOpen(false);
+
+      if (window.Telegram?.WebApp) {
+        try {
+          window.Telegram.WebApp.showAlert('Профиль успешно обновлен!');
+        } catch (error) {
+          alert('Профиль успешно обновлен!');
+        }
+      } else {
+        alert('Профиль успешно обновлен!');
+      }
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      let errorMessage = 'Ошибка при обновлении профиля. Попробуйте снова.';
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      if (window.Telegram?.WebApp) {
+        try {
+          window.Telegram.WebApp.showAlert(errorMessage);
+        } catch (alertError) {
+          alert(errorMessage);
+        }
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!user) return;
+
+    const confirmMessage = 'Вы уверены, что хотите удалить свой профиль? Это действие нельзя отменить.';
+    const confirmed = typeof window !== 'undefined' && window.Telegram?.WebApp 
+      ? await new Promise<boolean>((resolve) => {
+          try {
+            window.Telegram!.WebApp.showConfirm(confirmMessage, (confirmed) => {
+              resolve(confirmed);
+            });
+          } catch {
+            resolve(window.confirm(confirmMessage));
+          }
+        })
+      : window.confirm(confirmMessage);
+
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteProfile();
+      logout();
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Error deleting profile:', error);
+      let errorMessage = 'Ошибка при удалении профиля. Попробуйте снова.';
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      if (window.Telegram?.WebApp) {
+        try {
+          window.Telegram.WebApp.showAlert(errorMessage);
+        } catch (alertError) {
+          alert(errorMessage);
+        }
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
 
@@ -282,6 +403,19 @@ const DashboardPage = () => {
     const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
     return `${months[calendarMonth]} ${calendarYear}`;
   };
+
+  // Синхронизация формы с данными пользователя
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        middleName: user.middleName || '',
+        birthDate: user.birthDate || '',
+        timezone: user.timezone || getDefaultTimezone(),
+      });
+    }
+  }, [user]);
 
   // Загрузка данных дашборда
   useEffect(() => {
@@ -598,6 +732,130 @@ const DashboardPage = () => {
                 >
                   {isCreating ? 'Создание...' : 'Создать группу'}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно настроек */}
+      {isSettingsOpen && (
+        <div className={styles.calendarModal} onClick={handleCloseSettings}>
+          <div className={styles.calendarModalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.createGroupHeader}>
+              <h2 className={styles.createGroupTitle}>Настройки профиля</h2>
+              <button onClick={handleCloseSettings} className={styles.createGroupCloseButton}>
+                <XMarkIcon className={styles.calendarCloseIcon} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveProfile} className={styles.createGroupForm}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Имя <span className={styles.requiredStar}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.firstName}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, firstName: e.target.value }))}
+                  className={styles.formInput}
+                  placeholder="Введите имя"
+                  required
+                  disabled={isSaving || isDeleting}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Фамилия <span className={styles.requiredStar}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.lastName}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, lastName: e.target.value }))}
+                  className={styles.formInput}
+                  placeholder="Введите фамилию"
+                  required
+                  disabled={isSaving || isDeleting}
+                />
+              </div>
+
+              {user?.role === 'teacher' && (
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    Отчество
+                  </label>
+                  <input
+                    type="text"
+                    value={profileForm.middleName}
+                    onChange={(e) => setProfileForm(prev => ({ ...prev, middleName: e.target.value }))}
+                    className={styles.formInput}
+                    placeholder="Введите отчество"
+                    disabled={isSaving || isDeleting}
+                  />
+                </div>
+              )}
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Дата рождения <span className={styles.requiredStar}>*</span>
+                </label>
+                <input
+                  type="date"
+                  value={profileForm.birthDate}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, birthDate: e.target.value }))}
+                  className={styles.formInput}
+                  required
+                  disabled={isSaving || isDeleting}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Часовой пояс <span className={styles.requiredStar}>*</span>
+                </label>
+                <select
+                  value={profileForm.timezone}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, timezone: e.target.value }))}
+                  className={styles.formSelect}
+                  required
+                  disabled={isSaving || isDeleting}
+                >
+                  {timezones.map((tz) => (
+                    <option key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  onClick={handleDeleteProfile}
+                  className={styles.formDeleteButton}
+                  disabled={isSaving || isDeleting}
+                >
+                  {isDeleting ? 'Удаление...' : 'Удалить профиль'}
+                </button>
+                <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+                  <button
+                    type="button"
+                    onClick={handleCloseSettings}
+                    className={styles.formCancelButton}
+                    disabled={isSaving || isDeleting}
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    className={styles.formSubmitButton}
+                    disabled={isSaving || isDeleting || !profileForm.firstName.trim() || !profileForm.lastName.trim()}
+                  >
+                    {isSaving ? 'Сохранение...' : 'Сохранить'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
