@@ -1,15 +1,23 @@
 import apiClient from './apiClient';
 
+// Интерфейсы соответствуют бэкенд схемам из Pydantic
 export interface Homework {
+  id: number;
+  group_id: number;
+  description: string;
+  deadline: string; // ISO datetime string
+  created_at: string; // ISO datetime string
+  reminder_sent: boolean;
+}
+
+// Интерфейс для фронтенда (camelCase для удобства)
+export interface HomeworkFrontend {
   id: string;
-  title: string;
   description: string;
   groupId: string;
-  teacherId: string;
   dueDate: string;
   createdAt: string;
-  updatedAt: string;
-  submissions?: HomeworkSubmission[];
+  reminderSent: boolean;
 }
 
 export interface HomeworkSubmission {
@@ -22,54 +30,75 @@ export interface HomeworkSubmission {
   feedback?: string;
 }
 
-// DTO для отправки на бэкенд (соответствует API бэкенда)
+// DTO для создания домашнего задания (соответствует HomeworkCreate из бэкенда)
 export interface CreateHomeworkRequestDto {
-  group_id: string;
   description: string;
-  deadline: string;
+  deadline: string; // ISO datetime string
 }
 
 // DTO для использования на фронтенде (удобнее работать с camelCase)
 export interface CreateHomeworkDto {
-  title?: string; // Не используется бэкендом, только для фронтенда
   description: string;
   groupId: string; // Конвертируется в group_id при отправке
-  dueDate: string; // Конвертируется в deadline при отправке
+  dueDate: string; // Конвертируется в deadline при отправке (ISO datetime string)
+}
+
+// DTO для обновления домашнего задания (соответствует HomeworkUpdate из бэкенда)
+export interface UpdateHomeworkRequestDto {
+  description?: string;
+  deadline?: string; // ISO datetime string
 }
 
 export interface SubmitHomeworkDto {
   content: string;
 }
 
+// Преобразование данных домашнего задания из snake_case в camelCase для фронтенда
+export const transformHomework = (apiData: Homework): HomeworkFrontend => ({
+  id: String(apiData.id),
+  description: apiData.description,
+  groupId: String(apiData.group_id),
+  dueDate: apiData.deadline,
+  createdAt: apiData.created_at,
+  reminderSent: apiData.reminder_sent,
+});
+
 // Получить все домашние задания для группы
-export const getHomeworkByGroup = async (groupId: string): Promise<Homework[]> => {
+export const getHomeworkByGroup = async (groupId: string): Promise<HomeworkFrontend[]> => {
   const response = await apiClient.get<Homework[]>(`/homework/group/${groupId}`);
-  return response.data;
+  return response.data.map(transformHomework);
 };
 
 // Получить домашнее задание по ID
-export const getHomeworkById = async (id: string): Promise<Homework> => {
+export const getHomeworkById = async (id: string): Promise<HomeworkFrontend> => {
   const response = await apiClient.get<Homework>(`/homework/${id}`);
-  return response.data;
+  return transformHomework(response.data);
 };
 
-// Создать новое домашнее задание
-// Бэкенд ожидает: group_id, description, deadline
-export const createHomework = async (data: CreateHomeworkDto): Promise<Homework> => {
+// Создать новое домашнее задание для группы
+// Бэкенд ожидает: description, deadline (group_id берется из URL)
+export const createHomework = async (groupId: string, data: CreateHomeworkDto): Promise<HomeworkFrontend> => {
   // Конвертируем фронтенд формат в формат бэкенда
   const requestData: CreateHomeworkRequestDto = {
-    group_id: data.groupId,
     description: data.description,
     deadline: data.dueDate,
   };
-  const response = await apiClient.post<Homework>('/homework', requestData);
-  return response.data;
+  const response = await apiClient.post<Homework>(`/groups/${groupId}/homework`, requestData);
+  return transformHomework(response.data);
 };
 
 // Обновить домашнее задание
-export const updateHomework = async (id: string, data: Partial<CreateHomeworkDto>): Promise<Homework> => {
-  const response = await apiClient.put<Homework>(`/homework/${id}`, data);
-  return response.data;
+export const updateHomework = async (id: string, data: Partial<CreateHomeworkDto>): Promise<HomeworkFrontend> => {
+  // Конвертируем фронтенд формат в формат бэкенда
+  const requestData: UpdateHomeworkRequestDto = {};
+  if (data.description !== undefined) {
+    requestData.description = data.description;
+  }
+  if (data.dueDate !== undefined) {
+    requestData.deadline = data.dueDate;
+  }
+  const response = await apiClient.put<Homework>(`/homework/${id}`, requestData);
+  return transformHomework(response.data);
 };
 
 // Удалить домашнее задание

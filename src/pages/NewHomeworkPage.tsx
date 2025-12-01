@@ -25,8 +25,7 @@ const NewHomeworkPage = () => {
     setIsLoading(true);
     try {
       const homeworkData: CreateHomeworkDto = {
-        title: taskText.trim(),
-        description: taskText.trim(), // В будущем можно разделить на title и description
+        description: taskText.trim(),
         groupId,
         dueDate: new Date(deadline).toISOString(),
       };

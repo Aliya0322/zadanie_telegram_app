@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
-import type { Homework } from '../api/homeworkApi';
+import type { HomeworkFrontend } from '../api/homeworkApi';
 import { formatDateTime, isPast } from '../utils/timeFormat';
 import styles from '../features/Groups/Dashboard.module.css';
 
@@ -20,9 +20,9 @@ const StudentDashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { user: telegramUser } = useTelegram();
-  const [activeHomework, setActiveHomework] = useState<Homework[]>([]);
+  const [activeHomework, setActiveHomework] = useState<HomeworkFrontend[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
+  const [selectedHomework, setSelectedHomework] = useState<HomeworkFrontend | null>(null);
   const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
 
   // Получение имени пользователя

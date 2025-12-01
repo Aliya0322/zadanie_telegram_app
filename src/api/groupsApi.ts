@@ -1,43 +1,54 @@
 import apiClient from './apiClient';
 
+// Интерфейсы соответствуют бэкенд схемам из Pydantic
 export interface Group {
+  id: number;
+  name: string;
+  teacher_id: number;
+  invite_code: string;
+  is_active: boolean;
+  created_at: string; // ISO datetime string
+  students: number[]; // Список ID студентов
+}
+
+// Интерфейс для фронтенда (camelCase для удобства)
+export interface GroupFrontend {
   id: string;
   name: string;
-  description?: string;
   teacherId: string;
   students?: string[];
   inviteToken?: string;
-  status?: 'active' | 'paused';
+  isActive: boolean;
   createdAt: string;
-  updatedAt: string;
+}
+
+// GroupResponseWithInvite (расширенный ответ с ссылкой-приглашением)
+export interface GroupWithInviteLink extends Group {
+  invite_link: string;
 }
 
 export interface CreateGroupDto {
   name: string;
-  description?: string;
-  meetingLink?: string;
 }
 
-// Преобразование данных группы из snake_case в camelCase
-const transformGroup = (apiData: any): Group => ({
-  id: String(apiData.id || ''),
-  name: apiData.name || '',
-  description: apiData.description || undefined,
-  teacherId: String(apiData.teacher_id || apiData.teacherId || ''),
-  students: apiData.students || undefined,
-  inviteToken: apiData.invite_code || apiData.inviteToken || undefined,
-  status: apiData.status || 'active',
-  createdAt: apiData.created_at || apiData.createdAt || '',
-  updatedAt: apiData.updated_at || apiData.updatedAt || '',
+// Преобразование данных группы из snake_case в camelCase для фронтенда
+export const transformGroup = (apiData: Group): GroupFrontend => ({
+  id: String(apiData.id),
+  name: apiData.name,
+  teacherId: String(apiData.teacher_id),
+  students: apiData.students?.map(id => String(id)),
+  inviteToken: apiData.invite_code,
+  isActive: apiData.is_active,
+  createdAt: apiData.created_at,
 });
 
 // Получить все группы
-export const getGroups = async (): Promise<Group[]> => {
+export const getGroups = async (): Promise<GroupFrontend[]> => {
   console.log('[getGroups] Fetching all groups...');
   try {
-    const response = await apiClient.get<any[]>('/groups');
+    const response = await apiClient.get<Group[]>('/groups');
     console.log('[getGroups] Raw response data:', response.data);
-    // Преобразуем каждую группу из snake_case в camelCase
+    // Преобразуем каждую группу из snake_case в camelCase для фронтенда
     const transformed = response.data.map(transformGroup);
     console.log('[getGroups] Transformed groups:', transformed);
     return transformed;
@@ -93,9 +104,9 @@ export const getGroupById = async (id: string | number): Promise<Group> => {
   });
   
   try {
-    const response = await apiClient.get<any>(url);
+    const response = await apiClient.get<Group>(url);
     console.log('[getGroupById] ✅ Success, response data:', response.data);
-    // Преобразуем ответ API из snake_case в camelCase
+    // Преобразуем ответ API из snake_case в camelCase для фронтенда
     const transformed = transformGroup(response.data);
     console.log('[getGroupById] Transformed group:', transformed);
     return transformed;
@@ -126,16 +137,22 @@ export const getGroupById = async (id: string | number): Promise<Group> => {
 };
 
 // Создать новую группу
-export const createGroup = async (data: CreateGroupDto): Promise<Group> => {
-  const response = await apiClient.post<any>('/groups', data);
-  // Преобразуем ответ API из snake_case в camelCase
+export const createGroup = async (data: CreateGroupDto): Promise<GroupFrontend> => {
+  const response = await apiClient.post<Group>('/groups', data);
+  // Преобразуем ответ API из snake_case в camelCase для фронтенда
   return transformGroup(response.data);
 };
 
-// Обновить группу
-export const updateGroup = async (id: string, data: Partial<CreateGroupDto>): Promise<Group> => {
-  const response = await apiClient.put<any>(`/groups/${id}`, data);
-  // Преобразуем ответ API из snake_case в camelCase
+// Обновить группу (название)
+export const updateGroup = async (id: string, data: { name: string }): Promise<GroupFrontend> => {
+  const response = await apiClient.put<Group>(`/groups/${id}`, data);
+  // Преобразуем ответ API из snake_case в camelCase для фронтенда
+  return transformGroup(response.data);
+};
+
+// Обновить статус группы (активна/неактивна)
+export const updateGroupStatus = async (id: string, isActive: boolean): Promise<GroupFrontend> => {
+  const response = await apiClient.patch<Group>(`/groups/${id}/status`, { is_active: isActive });
   return transformGroup(response.data);
 };
 
@@ -144,36 +161,27 @@ export const deleteGroup = async (id: string): Promise<void> => {
   await apiClient.delete(`/groups/${id}`);
 };
 
-// Приостановить группу
-export const pauseGroup = async (id: string): Promise<Group> => {
-  const response = await apiClient.post<any>(`/groups/${id}/pause`);
+// Добавить студента в группу (по invite_code)
+export const joinGroupByInviteCode = async (inviteCode: string): Promise<GroupFrontend> => {
+  const response = await apiClient.post<Group>(`/groups/join`, { invite_code: inviteCode });
   return transformGroup(response.data);
 };
 
-// Возобновить группу
-export const resumeGroup = async (id: string): Promise<Group> => {
-  const response = await apiClient.post<any>(`/groups/${id}/resume`);
-  return transformGroup(response.data);
-};
-
-// Добавить студента в группу
-export const addStudentToGroup = async (groupId: string, studentId: string): Promise<Group> => {
-  const response = await apiClient.post<any>(`/groups/${groupId}/students`, { studentId });
-  // Преобразуем ответ API из snake_case в camelCase
+// Добавить студента в группу (по ID студента)
+export const addStudentToGroup = async (groupId: string, studentId: string): Promise<GroupFrontend> => {
+  const response = await apiClient.post<Group>(`/groups/${groupId}/students`, { student_id: Number(studentId) });
   return transformGroup(response.data);
 };
 
 // Удалить студента из группы
-export const removeStudentFromGroup = async (groupId: string, studentId: string): Promise<Group> => {
-  const response = await apiClient.delete<any>(`/groups/${groupId}/students/${studentId}`);
-  // Преобразуем ответ API из snake_case в camelCase
+export const removeStudentFromGroup = async (groupId: string, studentId: string): Promise<GroupFrontend> => {
+  const response = await apiClient.delete<Group>(`/groups/${groupId}/students/${studentId}`);
   return transformGroup(response.data);
 };
 
-// Создать домашнее задание для группы
-// API-запрос на создание задания и автоматическое создание уведомлений
-export const createHomework = async (groupId: string, data: any) => {
-  const response = await apiClient.post(`/groups/${groupId}/homework`, data);
+// Получить группу с ссылкой-приглашением
+export const getGroupWithInviteLink = async (id: string): Promise<GroupWithInviteLink> => {
+  const response = await apiClient.get<GroupWithInviteLink>(`/groups/${id}/invite`);
   return response.data;
 };
 

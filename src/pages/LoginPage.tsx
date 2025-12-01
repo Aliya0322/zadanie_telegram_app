@@ -215,6 +215,8 @@ const LoginPage: React.FC = () => {
       console.log('[LoginPage] Login/registration successful, user:', {
         userId: loginResponse.user.id,
         role: loginResponse.user.role,
+        isNewUser: loginResponse.is_new_user,
+        message: loginResponse.message,
       });
       
       // Сохраняем пользователя в контекст (преобразуем в формат AuthContext)
@@ -227,8 +229,11 @@ const LoginPage: React.FC = () => {
         role: loginResponse.user.role,
         telegramId: loginResponse.user.telegramId,
         timezone: loginResponse.user.timezone,
+        isActive: loginResponse.user.isActive,
+        createdAt: loginResponse.user.createdAt,
       };
-      login(contextUser, loginResponse.token || '');
+      // Бэкенд не использует токены, авторизация через Telegram initData
+      login(contextUser, '');
       
       // Навигация в зависимости от роли
       if (selectedRole === 'teacher') {

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import type {
-  Homework,
+  HomeworkFrontend,
   CreateHomeworkDto,
 } from '../../../api/homeworkApi';
 import {
@@ -11,7 +11,7 @@ import {
 } from '../../../api/homeworkApi';
 
 export const useHomework = (groupId?: string) => {
-  const [homework, setHomework] = useState<Homework[]>([]);
+  const [homework, setHomework] = useState<HomeworkFrontend[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -31,10 +31,13 @@ export const useHomework = (groupId?: string) => {
   }, [groupId]);
 
   const create = useCallback(async (data: CreateHomeworkDto) => {
+    if (!groupId) {
+      throw new Error('Group ID is required to create homework');
+    }
     setIsLoading(true);
     setError(null);
     try {
-      const newHomework = await createHomework(data);
+      const newHomework = await createHomework(groupId, data);
       setHomework((prev) => [...prev, newHomework]);
       return newHomework;
     } catch (err) {
@@ -43,7 +46,7 @@ export const useHomework = (groupId?: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [groupId]);
 
   const update = useCallback(async (id: string, data: Partial<CreateHomeworkDto>) => {
     setIsLoading(true);

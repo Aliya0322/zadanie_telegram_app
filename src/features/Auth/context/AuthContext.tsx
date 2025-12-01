@@ -1,20 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { getCurrentUser } from '../../../api/authApi';
+import { getCurrentUser, type UserFrontend } from '../../../api/authApi';
 
 export type UserRole = 'teacher' | 'student';
 
-export interface User {
-  id: string;
-  firstName: string;
-  lastName?: string;
-  middleName?: string;
-  birthDate?: string;
-  role: UserRole;
-  email?: string;
-  telegramId?: string;
-  timezone?: string;
-}
+// Используем UserFrontend из authApi
+export type User = UserFrontend;
 
 interface AuthContextType {
   user: User | null;

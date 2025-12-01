@@ -17,8 +17,8 @@ import {
   ChevronUpIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
-import { getGroupById, updateGroup, deleteGroup, pauseGroup, resumeGroup } from '../api/groupsApi';
-import type { Group } from '../api/groupsApi';
+import { getGroupById, updateGroup, deleteGroup, updateGroupStatus } from '../api/groupsApi';
+import type { GroupFrontend } from '../api/groupsApi';
 import { useTelegram } from '../hooks/useTelegram';
 import { useHomework } from '../features/Homework/hooks/useHomework';
 import type { CreateHomeworkDto } from '../api/homeworkApi';
@@ -37,7 +37,7 @@ const GroupDetailsPage = () => {
   const navigate = useNavigate();
   const { webApp } = useTelegram();
   const [activeTab, setActiveTab] = useState<'students' | 'schedule' | 'tasks'>('tasks');
-  const [group, setGroup] = useState<Group | null>(null);
+  const [group, setGroup] = useState<GroupFrontend | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
   const [homeworkTitle, setHomeworkTitle] = useState('');
@@ -235,14 +235,13 @@ const GroupDetailsPage = () => {
 
     setIsTogglingStatus(true);
     try {
-      const updatedGroup = group.status === 'paused' 
-        ? await resumeGroup(id)
-        : await pauseGroup(id);
+      const newStatus = !group.isActive;
+      const updatedGroup = await updateGroupStatus(id, newStatus);
       setGroup(updatedGroup);
 
-      const statusMessage = updatedGroup.status === 'paused' 
-        ? 'Группа приостановлена'
-        : 'Группа возобновлена';
+      const statusMessage = updatedGroup.isActive 
+        ? 'Группа возобновлена'
+        : 'Группа приостановлена';
 
       if (window.Telegram?.WebApp) {
         try {
@@ -1366,11 +1365,11 @@ const GroupDetailsPage = () => {
                 >
                   {isTogglingStatus 
                     ? 'Изменение...' 
-                    : group.status === 'paused' 
+                    : !group.isActive 
                       ? 'Возобновить группу' 
                       : 'Приостановить группу'}
                 </button>
-                {group.status === 'paused' && (
+                {!group.isActive && (
                   <p className={styles.statusHint}>Группа приостановлена</p>
                 )}
               </div>

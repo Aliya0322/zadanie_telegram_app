@@ -1,10 +1,10 @@
 import React from 'react';
-import type { Group } from '../../../api/groupsApi';
+import type { GroupFrontend } from '../../../api/groupsApi';
 import CustomCard from '../../../components/ui/CustomCard';
 import Button from '../../../components/ui/Button';
 
 export interface GroupDetailsProps {
-  group: Group;
+  group: GroupFrontend;
   onEdit?: () => void;
   onDelete?: () => void;
   onAddStudent?: () => void;
