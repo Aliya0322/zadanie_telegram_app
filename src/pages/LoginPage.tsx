@@ -222,19 +222,19 @@ const LoginPage: React.FC = () => {
         message: loginResponse.message,
       });
       
-      // loginResponse.user это User (бэкенд тип), но authLogin возвращает UserFrontend
-      // Преобразуем User в UserFrontend для контекста
+      // loginResponse.user уже является UserFrontend (camelCase)
+      // Можно использовать напрямую
       const contextUser: UserFrontend = {
-        id: String(loginResponse.user.id),
-        firstName: loginResponse.user.first_name || '',
-        lastName: loginResponse.user.last_name || '',
-        middleName: loginResponse.user.patronymic || undefined,
-        birthDate: loginResponse.user.birthdate || undefined,
+        id: loginResponse.user.id,
+        firstName: loginResponse.user.firstName,
+        lastName: loginResponse.user.lastName,
+        middleName: loginResponse.user.middleName,
+        birthDate: loginResponse.user.birthDate,
         role: loginResponse.user.role,
-        telegramId: String(loginResponse.user.tg_id),
-        timezone: loginResponse.user.timezone || 'UTC',
-        isActive: loginResponse.user.is_active,
-        createdAt: loginResponse.user.created_at,
+        telegramId: loginResponse.user.telegramId,
+        timezone: loginResponse.user.timezone,
+        isActive: loginResponse.user.isActive,
+        createdAt: loginResponse.user.createdAt,
       };
       // Бэкенд не использует токены, авторизация через Telegram initData
       login(contextUser, '');
