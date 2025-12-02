@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
-import type { HomeworkFrontend } from '../api/homeworkApi';
+import type { Homework } from '../api/homeworkApi';
 import { formatDateTime, isPast } from '../utils/timeFormat';
 import styles from '../features/Groups/Dashboard.module.css';
 
@@ -20,9 +20,9 @@ const StudentDashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { user: telegramUser } = useTelegram();
-  const [activeHomework, setActiveHomework] = useState<HomeworkFrontend[]>([]);
+  const [activeHomework, setActiveHomework] = useState<Homework[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedHomework, setSelectedHomework] = useState<HomeworkFrontend | null>(null);
+  const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
   const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
 
   // Получение имени пользователя
@@ -87,21 +87,21 @@ const StudentDashboardPage = () => {
       // В реальном приложении здесь будет API для получения заданий студента
       // Пока используем моковые данные
       // Моковые данные с файлами (в реальном приложении файлы будут приходить с API)
-      const mockHomework: (HomeworkFrontend & { files?: string[] })[] = [
+      const mockHomework: (Homework & { files?: string[] })[] = [
         {
-          id: 'hw1',
+          id: 1,
+          groupId: 1,
           description: 'Квадратные уравнения: Решить номера №124, 125, 128 из учебника',
-          groupId: '1',
-          dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // через 2 дня
+          deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // через 2 дня
           createdAt: new Date().toISOString(),
           reminderSent: false,
           files: ['Учебник_стр_45.pdf', 'Дополнительные_задачи.docx'],
         },
         {
-          id: 'hw2',
+          id: 2,
+          groupId: 2,
           description: 'Тригонометрия: Выполнить упражнения на стр. 45',
-          groupId: '2',
-          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // через 5 дней
+          deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // через 5 дней
           createdAt: new Date().toISOString(),
           reminderSent: false,
           files: ['Тригонометрия_задачи.pdf'],
@@ -221,7 +221,7 @@ const StudentDashboardPage = () => {
         ) : (
             <div className={styles.groupsList}>
             {activeHomework.map((homework) => {
-              const deadlineStatus = getDeadlineStatus(homework.dueDate);
+              const deadlineStatus = getDeadlineStatus(homework.deadline);
 
               return (
                   <div 
@@ -252,7 +252,7 @@ const StudentDashboardPage = () => {
                           {deadlineStatus.text}
                             </div>
                             <span className={styles.deadlineText}>
-                          До: {formatDateTime(homework.dueDate)}
+                          До: {formatDateTime(homework.deadline)}
                         </span>
                           </div>
                         </div>
@@ -303,7 +303,7 @@ const StudentDashboardPage = () => {
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Дедлайн</label>
                 <div className={styles.modalDateBox}>
-                  {formatDateTime(selectedHomework.dueDate)}
+                  {formatDateTime(selectedHomework.deadline)}
                 </div>
               </div>
 

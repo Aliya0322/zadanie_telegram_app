@@ -1,10 +1,10 @@
 import React from 'react';
-import type { GroupFrontend } from '../../../api/groupsApi';
+import type { Group } from '../../../api/groupsApi';
 import CustomCard from '../../../components/ui/CustomCard';
 import Button from '../../../components/ui/Button';
 
 export interface GroupDetailsProps {
-  group: GroupFrontend;
+  group: Group;
   onEdit?: () => void;
   onDelete?: () => void;
   onAddStudent?: () => void;
@@ -46,7 +46,7 @@ const GroupDetails: React.FC<GroupDetailsProps> = ({
           <ul className="space-y-2">
             {group.students.map((studentId, index) => (
               <li key={index} className="text-sm text-gray-600">
-                👤 {studentId}
+                👤 Ученик #{studentId}
               </li>
             ))}
           </ul>

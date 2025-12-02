@@ -82,7 +82,7 @@ const DashboardPage = () => {
   
   const greetingName = getGreetingName();
 
-  const handleGroupClick = (groupId: string) => {
+  const handleGroupClick = (groupId: number) => {
     console.log('[handleGroupClick] Navigating to group:', {
       groupId,
       groupIdType: typeof groupId,

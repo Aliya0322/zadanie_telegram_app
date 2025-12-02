@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext } from 'react';
 import type { ReactNode } from 'react';
-import type { GroupFrontend } from '../../../api/groupsApi';
+import type { Group } from '../../../api/groupsApi';
 import { getGroups, createGroup } from '../../../api/groupsApi';
 import type { CreateGroupDto } from '../../../api/groupsApi';
 
@@ -14,7 +14,7 @@ export interface ScheduleItem {
 }
 
 interface GroupContextType {
-  groups: GroupFrontend[];
+  groups: Group[];
   schedule: ScheduleItem[];
   fetchGroups: () => Promise<void>;
   createGroup: (newGroupData: CreateGroupDto) => Promise<void>;
@@ -35,7 +35,7 @@ interface GroupProviderProps {
 }
 
 export const GroupProvider: React.FC<GroupProviderProps> = ({ children }) => {
-  const [groups, setGroups] = useState<GroupFrontend[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [schedule] = useState<ScheduleItem[]>([]);
 
   // Функции для загрузки, создания и обновления данных

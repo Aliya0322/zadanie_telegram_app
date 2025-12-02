@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import type {
-  HomeworkFrontend,
+  Homework,
   CreateHomeworkDto,
 } from '../../../api/homeworkApi';
 import {
@@ -11,7 +11,7 @@ import {
 } from '../../../api/homeworkApi';
 
 export const useHomework = (groupId?: string) => {
-  const [homework, setHomework] = useState<HomeworkFrontend[]>([]);
+  const [homework, setHomework] = useState<Homework[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -54,7 +54,7 @@ export const useHomework = (groupId?: string) => {
     try {
       const updatedHomework = await updateHomework(id, data);
       setHomework((prev) =>
-        prev.map((hw) => (hw.id === id ? updatedHomework : hw))
+        prev.map((hw) => (hw.id === Number(id) ? updatedHomework : hw))
       );
       return updatedHomework;
     } catch (err) {
@@ -70,7 +70,7 @@ export const useHomework = (groupId?: string) => {
     setError(null);
     try {
       await deleteHomework(id);
-      setHomework((prev) => prev.filter((hw) => hw.id !== id));
+      setHomework((prev) => prev.filter((hw) => hw.id !== Number(id)));
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to delete homework'));
       throw err;

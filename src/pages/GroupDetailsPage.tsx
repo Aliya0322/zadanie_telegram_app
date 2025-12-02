@@ -17,8 +17,8 @@ import {
   ChevronUpIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
-import { getGroupById, updateGroup, deleteGroup, updateGroupStatus } from '../api/groupsApi';
-import type { GroupFrontend } from '../api/groupsApi';
+import { getGroupById, updateGroup, deleteGroup, updateGroupStatus, removeStudentFromGroup } from '../api/groupsApi';
+import type { Group } from '../api/groupsApi';
 import { useTelegram } from '../hooks/useTelegram';
 import { useHomework } from '../features/Homework/hooks/useHomework';
 import type { CreateHomeworkDto } from '../api/homeworkApi';
@@ -37,7 +37,7 @@ const GroupDetailsPage = () => {
   const navigate = useNavigate();
   const { webApp } = useTelegram();
   const [activeTab, setActiveTab] = useState<'students' | 'schedule' | 'tasks'>('tasks');
-  const [group, setGroup] = useState<GroupFrontend | null>(null);
+  const [group, setGroup] = useState<Group | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
   const [homeworkTitle, setHomeworkTitle] = useState('');
@@ -99,13 +99,13 @@ const GroupDetailsPage = () => {
     setIsLoadingSchedule(true);
     try {
       const schedules = await getScheduleByGroup(groupId);
-      // Преобразуем ScheduleFrontend в формат для отображения
+      // Преобразуем Schedule в формат для отображения
       const transformed = schedules.map(schedule => ({
-        id: schedule.id,
+        id: String(schedule.id),
         dayOfWeek: schedule.dayOfWeek,
         startTime: schedule.timeAt,
         duration: schedule.duration || 90,
-        meetingLink: schedule.meetingLink,
+        meetingLink: schedule.meetingLink || undefined,
       }));
       setScheduleItems(transformed);
       console.log('[fetchSchedule] ✅ Schedule fetched successfully:', transformed);
@@ -330,9 +330,9 @@ const GroupDetailsPage = () => {
   };
 
   const handleCopyInviteLink = () => {
-    if (!group?.inviteToken) return;
+    if (!group?.inviteCode) return;
     
-    const inviteLink = generateInviteLink(group.inviteToken);
+    const inviteLink = generateInviteLink(group.inviteCode);
     
     navigator.clipboard.writeText(inviteLink)
       .then(() => {
@@ -352,27 +352,36 @@ const GroupDetailsPage = () => {
       });
   };
 
-  const handleRemoveStudent = (studentId: string) => {
-    setStudentToDelete(studentId);
+  const handleRemoveStudent = (studentId: number) => {
+    setStudentToDelete(String(studentId));
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!studentToDelete || !group) return;
 
-    // TODO: Вызов API для удаления ученика
-    console.log('Удаление ученика:', studentToDelete);
-    
-    // Обновляем локальное состояние
-    setGroup({
-      ...group,
-      students: group.students?.filter(id => id !== studentToDelete) || []
-    });
+    try {
+      const studentIdNum = Number(studentToDelete);
+      await removeStudentFromGroup(String(group.id), String(studentIdNum));
+      
+      // Обновляем локальное состояние
+      setGroup({
+        ...group,
+        students: group.students?.filter(id => id !== studentIdNum) || []
+      });
 
-    // Показываем уведомление об успехе
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.showAlert('Ученик удален из группы');
-    } else {
-      alert('Ученик удален из группы');
+      // Показываем уведомление об успехе
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert('Ученик удален из группы');
+      } else {
+        alert('Ученик удален из группы');
+      }
+    } catch (error: any) {
+      console.error('Ошибка при удалении ученика:', error);
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert('Ошибка при удалении ученика');
+      } else {
+        alert('Ошибка при удалении ученика');
+      }
     }
 
     setStudentToDelete(null);
@@ -462,21 +471,22 @@ const GroupDetailsPage = () => {
           ...scheduleFormData,
           duration: parseInt(scheduleFormData.duration, 10) || 90,
         };
+        const apiData = scheduleHelpers.formToApi(formDataWithNumberDuration, groupId);
         const updateData = {
-          day_of_week: scheduleHelpers.formToApi(formDataWithNumberDuration, groupId).day_of_week,
-          time_at: scheduleHelpers.formToApi(formDataWithNumberDuration, groupId).time_at,
-          duration: scheduleHelpers.formToApi(formDataWithNumberDuration, groupId).duration,
-          meeting_link: scheduleFormData.meetingLink || undefined,
+          dayOfWeek: apiData.dayOfWeek,
+          timeAt: apiData.timeAt,
+          duration: apiData.duration,
+          meetingLink: apiData.meetingLink,
         };
 
         const updated = await updateSchedule(scheduleId, updateData);
-        // Преобразуем ScheduleFrontend в формат для отображения
+        // Преобразуем Schedule в формат для отображения
         const transformed = {
-          id: updated.id,
+          id: String(updated.id),
           dayOfWeek: updated.dayOfWeek,
           startTime: updated.timeAt,
           duration: updated.duration || 90,
-          meetingLink: updated.meetingLink,
+          meetingLink: updated.meetingLink || undefined,
         };
         
         setScheduleItems(prev => prev.map(item => 
@@ -497,13 +507,13 @@ const GroupDetailsPage = () => {
         };
         const createData = scheduleHelpers.formToApi(formDataWithNumberDuration, groupId);
         const created = await createSchedule(createData);
-        // Преобразуем ScheduleFrontend в формат для отображения
+        // Преобразуем Schedule в формат для отображения
         const transformed = {
-          id: created.id,
+          id: String(created.id),
           dayOfWeek: created.dayOfWeek,
           startTime: created.timeAt,
           duration: created.duration || 90,
-          meetingLink: created.meetingLink,
+          meetingLink: created.meetingLink || undefined,
         };
         
         setScheduleItems(prev => [...prev, transformed]);
@@ -574,12 +584,12 @@ const GroupDetailsPage = () => {
 
   const handleOpenHomeworkModal = (homeworkId?: string) => {
     if (homeworkId) {
-      const homeworkItem = homework.find(hw => hw.id === homeworkId);
+      const homeworkItem = homework.find(hw => String(hw.id) === homeworkId);
       if (homeworkItem) {
         setHomeworkTitle(homeworkItem.description); // Используем description вместо title
         setHomeworkDescription(homeworkItem.description);
         // Преобразуем ISO дату в формат YYYY-MM-DD для input type="date"
-        const dueDate = new Date(homeworkItem.dueDate);
+        const dueDate = new Date(homeworkItem.deadline);
         const year = dueDate.getFullYear();
         const month = String(dueDate.getMonth() + 1).padStart(2, '0');
         const day = String(dueDate.getDate()).padStart(2, '0');
@@ -805,7 +815,7 @@ const GroupDetailsPage = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleOpenHomeworkModal(task.id);
+                            handleOpenHomeworkModal(String(task.id));
                           }}
                           className={styles.scheduleEditButton}
                           aria-label="Редактировать"
@@ -815,7 +825,7 @@ const GroupDetailsPage = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteHomework(task.id);
+                            handleDeleteHomework(String(task.id));
                           }}
                           className={styles.removeStudentButton}
                           aria-label="Удалить"
@@ -858,7 +868,7 @@ const GroupDetailsPage = () => {
                     <div key={index} className={styles.pastHomeworkCard}>
                       <UserGroupIcon className={`${styles.pastHomeworkIcon} ${styles.iconBlue}`} />
                       <div className={styles.pastHomeworkContent}>
-                        <div className={styles.pastHomeworkTitle}>{studentId}</div>
+                        <div className={styles.pastHomeworkTitle}>Ученик #{studentId}</div>
                         <div className={`${styles.pastHomeworkStatus} ${styles.greenStatus}`}>
                           Активен
                         </div>
@@ -884,7 +894,7 @@ const GroupDetailsPage = () => {
             </div>
 
             {/* Блок приглашения внизу */}
-            {group?.inviteToken && (
+            {group?.inviteCode && (
               <div className={styles.section}>
                 <div className={styles.inviteHeader}>
                   <h2 className={styles.sectionTitle}>ПРИГЛАШЕНИЕ УЧЕНИКОВ</h2>
@@ -907,8 +917,8 @@ const GroupDetailsPage = () => {
                       <LinkIcon className={styles.inviteLinkIcon} />
                       <div className={styles.inviteLinkContent}>
                         <div className={styles.inviteLinkLabel}>Ссылка для группы</div>
-                        <div className={styles.inviteLinkValue} title={generateInviteLink(group?.inviteToken || '')}>
-                          {generateInviteLink(group?.inviteToken || '')}
+                        <div className={styles.inviteLinkValue} title={generateInviteLink(group?.inviteCode || '')}>
+                          {generateInviteLink(group?.inviteCode || '')}
                         </div>
                       </div>
                     </div>

@@ -1,38 +1,28 @@
 import apiClient from './apiClient';
 
-// Интерфейсы соответствуют бэкенд схемам из Pydantic
+// Интерфейсы соответствуют бэкенд схемам из Pydantic (camelCase)
 export interface Schedule {
   id: number;
-  group_id: number;
-  day_of_week: string; // "monday", "tuesday", etc. (DayOfWeek enum)
-  time_at: string; // Time string in format "HH:MM:SS" or "HH:MM"
+  groupId: number;
+  dayOfWeek: string; // "monday", "tuesday", etc. (DayOfWeek enum)
+  timeAt: string; // Time string in format "HH:MM:SS" or "HH:MM"
   duration: number | null; // Продолжительность в минутах
-  meeting_link: string | null;
-}
-
-// Интерфейс для фронтенда (camelCase для удобства)
-export interface ScheduleFrontend {
-  id: string;
-  groupId: string;
-  dayOfWeek: string;
-  timeAt: string;
-  duration?: number;
-  meetingLink?: string;
+  meetingLink: string | null;
 }
 
 export interface CreateScheduleDto {
-  group_id: number;
-  day_of_week: string; // "monday", "tuesday", etc. (DayOfWeek enum)
-  time_at: string; // Time string in format "HH:MM:SS" or "HH:MM"
+  groupId: number;
+  dayOfWeek: string; // "monday", "tuesday", etc. (DayOfWeek enum)
+  timeAt: string; // Time string in format "HH:MM:SS" or "HH:MM"
   duration?: number | null; // Продолжительность в минутах
-  meeting_link?: string | null;
+  meetingLink?: string | null;
 }
 
 export interface UpdateScheduleDto {
-  day_of_week?: string;
-  time_at?: string; // Time string in format "HH:MM:SS" or "HH:MM"
+  dayOfWeek?: string;
+  timeAt?: string; // Time string in format "HH:MM:SS" or "HH:MM"
   duration?: number | null;
-  meeting_link?: string | null;
+  meetingLink?: string | null;
 }
 
 // Преобразование дня недели из русского в английский формат API
@@ -77,31 +67,21 @@ const timeFromApiFormat = (timeString: string): string => {
   return `${hours}:${minutes}`;
 };
 
-// Преобразование данных расписания из snake_case в camelCase для фронтенда
-const transformSchedule = (apiData: Schedule): ScheduleFrontend => ({
-  id: String(apiData.id),
-  groupId: String(apiData.group_id),
-  dayOfWeek: apiData.day_of_week,
-  timeAt: timeFromApiFormat(apiData.time_at),
-  duration: apiData.duration || undefined,
-  meetingLink: apiData.meeting_link || undefined,
-});
-
 // Получить расписание для группы
-// API: GET /api/v1/schedule/?group_id={group_id}
-export const getScheduleByGroup = async (groupId: number): Promise<ScheduleFrontend[]> => {
+// API: GET /api/v1/schedule/?groupId={groupId}
+export const getScheduleByGroup = async (groupId: number): Promise<Schedule[]> => {
   console.log('[getScheduleByGroup] Fetching schedule for group:', groupId);
   try {
-    // Используем query параметр group_id
+    // Используем query параметр groupId (camelCase)
     const response = await apiClient.get<Schedule[]>('/schedule/', {
-      params: { group_id: groupId },
+      params: { groupId },
     });
     console.log('[getScheduleByGroup] ✅ Success, response data:', response.data);
-    return response.data.map(transformSchedule);
+    return response.data;
   } catch (error: any) {
     console.error('[getScheduleByGroup] ❌ Error:', {
       groupId,
-      url: `/schedule/?group_id=${groupId}`,
+      url: `/schedule/?groupId=${groupId}`,
       status: error.response?.status,
       statusText: error.response?.statusText,
       data: error.response?.data,
@@ -111,19 +91,19 @@ export const getScheduleByGroup = async (groupId: number): Promise<ScheduleFront
 };
 
 // Создать расписание
-export const createSchedule = async (data: CreateScheduleDto): Promise<ScheduleFrontend> => {
+export const createSchedule = async (data: CreateScheduleDto): Promise<Schedule> => {
   console.log('[createSchedule] Creating schedule:', data);
   try {
-    // Преобразуем time_at в формат API, если нужно
+    // Преобразуем timeAt в формат API, если нужно
     const requestData: CreateScheduleDto = {
       ...data,
-      time_at: data.time_at.includes(':') && !data.time_at.includes('T') 
-        ? timeToApiFormat(data.time_at) 
-        : data.time_at,
+      timeAt: data.timeAt.includes(':') && !data.timeAt.includes('T') 
+        ? timeToApiFormat(data.timeAt) 
+        : data.timeAt,
     };
     const response = await apiClient.post<Schedule>('/schedule/', requestData);
     console.log('[createSchedule] ✅ Success, response data:', response.data);
-    return transformSchedule(response.data);
+    return response.data;
   } catch (error: any) {
     console.error('[createSchedule] ❌ Error:', {
       data,
@@ -136,19 +116,19 @@ export const createSchedule = async (data: CreateScheduleDto): Promise<ScheduleF
 };
 
 // Обновить расписание
-export const updateSchedule = async (scheduleId: number, data: UpdateScheduleDto): Promise<ScheduleFrontend> => {
+export const updateSchedule = async (scheduleId: number, data: UpdateScheduleDto): Promise<Schedule> => {
   console.log('[updateSchedule] Updating schedule:', { scheduleId, data });
   try {
-    // Преобразуем time_at в формат API, если нужно
+    // Преобразуем timeAt в формат API, если нужно
     const requestData: UpdateScheduleDto = {
       ...data,
-      time_at: data.time_at && data.time_at.includes(':') && !data.time_at.includes('T')
-        ? timeToApiFormat(data.time_at)
-        : data.time_at,
+      timeAt: data.timeAt && data.timeAt.includes(':') && !data.timeAt.includes('T')
+        ? timeToApiFormat(data.timeAt)
+        : data.timeAt,
     };
     const response = await apiClient.put<Schedule>(`/schedule/${scheduleId}`, requestData);
     console.log('[updateSchedule] ✅ Success, response data:', response.data);
-    return transformSchedule(response.data);
+    return response.data;
   } catch (error: any) {
     console.error('[updateSchedule] ❌ Error:', {
       scheduleId,
@@ -183,21 +163,21 @@ export const scheduleHelpers = {
   // Преобразовать данные из формы в формат API
   formToApi: (formData: { dayOfWeek: string; startTime: string; duration?: number; meetingLink?: string }, groupId: number): CreateScheduleDto => {
     return {
-      group_id: groupId,
-      day_of_week: dayOfWeekToApi(formData.dayOfWeek),
-      time_at: timeToApiFormat(formData.startTime),
+      groupId: groupId,
+      dayOfWeek: dayOfWeekToApi(formData.dayOfWeek),
+      timeAt: timeToApiFormat(formData.startTime),
       duration: formData.duration || null,
-      meeting_link: formData.meetingLink || null,
+      meetingLink: formData.meetingLink || null,
     };
   },
   
   // Преобразовать данные из API в формат для формы
   apiToForm: (schedule: Schedule): { dayOfWeek: string; startTime: string; duration?: number; meetingLink?: string } => {
     return {
-      dayOfWeek: dayOfWeekFromApi(schedule.day_of_week),
-      startTime: timeFromApiFormat(schedule.time_at),
+      dayOfWeek: dayOfWeekFromApi(schedule.dayOfWeek),
+      startTime: timeFromApiFormat(schedule.timeAt),
       duration: schedule.duration || undefined,
-      meetingLink: schedule.meeting_link || undefined,
+      meetingLink: schedule.meetingLink || undefined,
     };
   },
   
@@ -205,11 +185,10 @@ export const scheduleHelpers = {
   apiToDisplay: (schedule: Schedule): { id: string; dayOfWeek: string; startTime: string; duration: number; meetingLink?: string } => {
     return {
       id: String(schedule.id),
-      dayOfWeek: dayOfWeekFromApi(schedule.day_of_week),
-      startTime: timeFromApiFormat(schedule.time_at),
+      dayOfWeek: dayOfWeekFromApi(schedule.dayOfWeek),
+      startTime: timeFromApiFormat(schedule.timeAt),
       duration: schedule.duration || 90, // По умолчанию 90 минут, если API не возвращает duration
-      meetingLink: schedule.meeting_link || undefined,
+      meetingLink: schedule.meetingLink || undefined,
     };
   },
 };
-

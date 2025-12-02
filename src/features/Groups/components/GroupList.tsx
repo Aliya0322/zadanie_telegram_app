@@ -1,10 +1,10 @@
 import React from 'react';
-import type { GroupFrontend } from '../../../api/groupsApi';
+import type { Group } from '../../../api/groupsApi';
 import CustomCard from '../../../components/ui/CustomCard';
 
 export interface GroupListProps {
-  groups: GroupFrontend[];
-  onGroupClick: (group: GroupFrontend) => void;
+  groups: Group[];
+  onGroupClick: (group: Group) => void;
   isLoading?: boolean;
 }
 
