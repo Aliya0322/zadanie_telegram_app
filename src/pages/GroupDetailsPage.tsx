@@ -790,7 +790,7 @@ const GroupDetailsPage = () => {
               <div className={styles.pastHomeworkList}>
                 {homework.length > 0 ? (
                   homework.map((task) => {
-                    const dueDate = new Date(task.dueDate);
+                    const dueDate = new Date(task.deadline);
                     const isPast = dueDate < new Date();
                     const formattedDate = dueDate.toLocaleDateString('ru-RU', {
                       day: '2-digit',
@@ -1330,7 +1330,7 @@ const GroupDetailsPage = () => {
 
       {/* Модальное окно подтверждения удаления задания */}
       {homeworkToDelete && (() => {
-        const homeworkItem = homework.find(item => item.id === homeworkToDelete);
+        const homeworkItem = homework.find(item => String(item.id) === homeworkToDelete);
         if (!homeworkItem) return null;
         return (
           <div className={styles.deleteModal} onClick={handleCancelDeleteHomework}>

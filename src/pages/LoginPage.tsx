@@ -218,7 +218,7 @@ const LoginPage: React.FC = () => {
       console.log('[LoginPage] Login/registration successful, user:', {
         userId: loginResponse.user.id,
         role: loginResponse.user.role,
-        isNewUser: loginResponse.is_new_user,
+        isNewUser: loginResponse.isNewUser,
         message: loginResponse.message,
       });
       
