@@ -444,7 +444,8 @@ const DashboardPage = () => {
   const calendarMonthYear = getCalendarMonthYear();
   
   // Используем только данные из API (без fallback на моковые данные)
-  const groups = dashboardData?.groups || [];
+  // Сортируем группы по ID для стабильного порядка отображения
+  const groups = (dashboardData?.groups || []).sort((a, b) => a.id - b.id);
   
   // Фильтруем расписание на сегодня
   const today = new Date();
@@ -830,14 +831,6 @@ const DashboardPage = () => {
               </div>
 
               <div className={styles.formActions}>
-                <button
-                  type="button"
-                  onClick={handleDeleteProfile}
-                  className={styles.formDeleteButton}
-                  disabled={isSaving || isDeleting}
-                >
-                  {isDeleting ? 'Удаление...' : 'Удалить профиль'}
-                </button>
                 <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
                   <button
                     type="button"
@@ -855,6 +848,14 @@ const DashboardPage = () => {
                     {isSaving ? 'Сохранение...' : 'Сохранить'}
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleDeleteProfile}
+                  className={styles.deleteProfileLink}
+                  disabled={isSaving || isDeleting}
+                >
+                  {isDeleting ? 'Удаление...' : 'Удалить профиль'}
+                </button>
               </div>
             </form>
           </div>

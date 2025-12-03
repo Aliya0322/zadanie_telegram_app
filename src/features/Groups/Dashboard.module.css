@@ -1131,3 +1131,27 @@
   box-shadow: none;
 }
 
+.deleteProfileLink {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 15px;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 8px 0;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  margin-top: 8px;
+}
+
+.deleteProfileLink:hover:not(:disabled) {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.deleteProfileLink:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+

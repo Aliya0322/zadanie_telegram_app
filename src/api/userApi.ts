@@ -51,7 +51,10 @@ export interface DashboardData {
 const transformDashboardGroup = (apiData: DashboardGroupResponse): Group => {
   // Создаем массив "моковых" student IDs для отображения количества
   // В реальности, если нужны реальные ID студентов, нужно запросить полную информацию о группе
-  const studentIds: number[] = Array(apiData.studentCount).fill(0).map((_, i) => i + 1);
+  // Если studentCount равен 0 или меньше, создаем пустой массив
+  const studentIds: number[] = apiData.studentCount > 0 
+    ? Array(apiData.studentCount).fill(0).map((_, i) => i + 1)
+    : [];
   
   return {
     id: apiData.id,
