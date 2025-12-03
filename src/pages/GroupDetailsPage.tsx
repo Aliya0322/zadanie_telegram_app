@@ -101,8 +101,8 @@ const GroupDetailsPage = () => {
       // Преобразуем Schedule в формат для отображения
       const transformed = schedules.map(schedule => ({
         id: String(schedule.id),
-        dayOfWeek: schedule.dayOfWeek,
-        startTime: schedule.timeAt,
+        dayOfWeek: formatDayOfWeek(schedule.dayOfWeek),
+        startTime: formatTime(schedule.timeAt),
         duration: schedule.duration || 90,
         meetingLink: schedule.meetingLink || undefined,
       }));
@@ -391,6 +391,30 @@ const GroupDetailsPage = () => {
   };
 
   // Функция для вычисления времени окончания
+  // Преобразование дня недели из API формата в русский с большой буквы
+  const formatDayOfWeek = (day: string): string => {
+    const mapping: Record<string, string> = {
+      'monday': 'Понедельник',
+      'tuesday': 'Вторник',
+      'wednesday': 'Среда',
+      'thursday': 'Четверг',
+      'friday': 'Пятница',
+      'saturday': 'Суббота',
+      'sunday': 'Воскресенье',
+    };
+    const lowerDay = day.toLowerCase();
+    return mapping[lowerDay] || day;
+  };
+
+  // Форматирование времени в формат 00:00 (без секунд)
+  const formatTime = (timeString: string): string => {
+    // Берем только часы и минуты, игнорируя секунды
+    const parts = timeString.split(':');
+    const hours = parts[0]?.padStart(2, '0') || '00';
+    const minutes = parts[1]?.padStart(2, '0') || '00';
+    return `${hours}:${minutes}`;
+  };
+
   const calculateEndTime = (startTime: string, durationMinutes: number): string => {
     const [hours, minutes] = startTime.split(':').map(Number);
     const startDate = new Date();
@@ -482,8 +506,8 @@ const GroupDetailsPage = () => {
         // Преобразуем Schedule в формат для отображения
         const transformed = {
           id: String(updated.id),
-          dayOfWeek: updated.dayOfWeek,
-          startTime: updated.timeAt,
+          dayOfWeek: formatDayOfWeek(updated.dayOfWeek),
+          startTime: formatTime(updated.timeAt),
           duration: updated.duration || 90,
           meetingLink: updated.meetingLink || undefined,
         };
@@ -509,8 +533,8 @@ const GroupDetailsPage = () => {
         // Преобразуем Schedule в формат для отображения
         const transformed = {
           id: String(created.id),
-          dayOfWeek: created.dayOfWeek,
-          startTime: created.timeAt,
+          dayOfWeek: formatDayOfWeek(created.dayOfWeek),
+          startTime: formatTime(created.timeAt),
           duration: created.duration || 90,
           meetingLink: created.meetingLink || undefined,
         };
@@ -803,11 +827,6 @@ const GroupDetailsPage = () => {
                           <div className={styles.pastHomeworkStatus}>
                             Дедлайн: {formattedDate}
                           </div>
-                          {task.description && (
-                            <div className={`${styles.pastHomeworkStatus} ${styles.smallStatusText}`}>
-                              {task.description.length > 50 ? `${task.description.substring(0, 50)}...` : task.description}
-                            </div>
-                          )}
                         </div>
                         <button
                           onClick={(e) => {

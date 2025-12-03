@@ -10,6 +10,15 @@ import {
   deleteHomework,
 } from '../../../api/homeworkApi';
 
+// Функция для сортировки заданий по дедлайну (от ближайшего к дальнему)
+const sortHomeworkByDeadline = (homeworkList: Homework[]): Homework[] => {
+  return [...homeworkList].sort((a, b) => {
+    const dateA = new Date(a.deadline).getTime();
+    const dateB = new Date(b.deadline).getTime();
+    return dateA - dateB;
+  });
+};
+
 export const useHomework = (groupId?: string) => {
   const [homework, setHomework] = useState<Homework[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +31,7 @@ export const useHomework = (groupId?: string) => {
     setError(null);
     try {
       const data = await getHomeworkByGroup(groupId);
-      setHomework(data);
+      setHomework(sortHomeworkByDeadline(data));
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch homework'));
     } finally {
@@ -38,7 +47,7 @@ export const useHomework = (groupId?: string) => {
     setError(null);
     try {
       const newHomework = await createHomework(groupId, data);
-      setHomework((prev) => [...prev, newHomework]);
+      setHomework((prev) => sortHomeworkByDeadline([...prev, newHomework]));
       return newHomework;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to create homework'));
@@ -54,7 +63,9 @@ export const useHomework = (groupId?: string) => {
     try {
       const updatedHomework = await updateHomework(id, data);
       setHomework((prev) =>
-        prev.map((hw) => (hw.id === Number(id) ? updatedHomework : hw))
+        sortHomeworkByDeadline(
+          prev.map((hw) => (hw.id === Number(id) ? updatedHomework : hw))
+        )
       );
       return updatedHomework;
     } catch (err) {

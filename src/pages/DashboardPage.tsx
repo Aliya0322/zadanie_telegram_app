@@ -449,13 +449,20 @@ const DashboardPage = () => {
   // Фильтруем расписание на сегодня
   const today = new Date();
   const todayDayOfWeekName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today.getDay()];
-  const todaySchedule = dashboardData?.schedule?.filter(item => {
+  const todaySchedule = (dashboardData?.schedule?.filter(item => {
     // Проверяем день недели (item.dayOfWeek это строка типа "monday", "tuesday" и т.д.)
     if (item.dayOfWeek) {
       return item.dayOfWeek.toLowerCase() === todayDayOfWeekName.toLowerCase();
     }
     return false;
-  }) || [];
+  }) || []).sort((a, b) => {
+    // Сортируем по времени от ближайшего к дальнему
+    const timeA = a.startTime.split(':').map(Number);
+    const timeB = b.startTime.split(':').map(Number);
+    const hoursA = timeA[0] * 60 + (timeA[1] || 0); // Преобразуем в минуты
+    const hoursB = timeB[0] * 60 + (timeB[1] || 0);
+    return hoursA - hoursB;
+  });
 
   return (
     <Page className={styles.page}>
