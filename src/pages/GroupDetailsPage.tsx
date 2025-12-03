@@ -1268,13 +1268,6 @@ const GroupDetailsPage = () => {
               
               <div className={styles.formActions}>
                 <button
-                  type="button"
-                  onClick={handleCloseScheduleModal}
-                  className={styles.formCancelButton}
-                >
-                  Отмена
-                </button>
-                <button
                   type="submit"
                   className={styles.formSubmitButton}
                   disabled={isLoadingSchedule || !scheduleFormData.dayOfWeek.trim() || !scheduleFormData.startTime.trim()}
@@ -1282,6 +1275,13 @@ const GroupDetailsPage = () => {
                   {isLoadingSchedule 
                     ? (editingScheduleId ? 'Сохранение...' : 'Создание...') 
                     : (editingScheduleId ? 'Сохранить' : 'Добавить')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCloseScheduleModal}
+                  className={styles.formCancelButton}
+                >
+                  Отмена
                 </button>
               </div>
             </form>
