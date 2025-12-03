@@ -710,19 +710,19 @@ const DashboardPage = () => {
               
               <div className={styles.formActions}>
                 <button
+                  type="submit"
+                  className={styles.formSubmitButton}
+                  disabled={isCreating || !groupName.trim()}
+                >
+                  {isCreating ? 'Создание...' : 'Создать группу'}
+                </button>
+                <button
                   type="button"
                   onClick={handleCloseCreateGroup}
                   className={styles.formCancelButton}
                   disabled={isCreating}
                 >
                   Отмена
-                </button>
-                <button
-                  type="submit"
-                  className={styles.formSubmitButton}
-                  disabled={isCreating || !groupName.trim()}
-                >
-                  {isCreating ? 'Создание...' : 'Создать группу'}
                 </button>
               </div>
             </form>

@@ -284,8 +284,10 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Логирование ошибок для отладки
-    if (import.meta.env.DEV) {
+    // Логирование ошибок (всегда, даже в production для CORS ошибок)
+    const isCorsError = error.message === 'Network Error' && !error.response;
+    
+    if (isCorsError || import.meta.env.DEV) {
       console.error('[API Error]', {
         url: error.config?.url,
         method: error.config?.method,
@@ -297,10 +299,13 @@ apiClient.interceptors.response.use(
         code: error.code,
       });
       
-      // Специальная обработка CORS ошибок
-      if (error.message === 'Network Error' && !error.response) {
-        console.error('[CORS Error] Возможна проблема с CORS или сервер недоступен');
+      // Специальная обработка CORS ошибок (важно видеть в production)
+      if (isCorsError) {
+        console.error('[CORS Error] ❌ Проблема с CORS!');
+        console.error('Origin:', window.location.origin);
         console.error('Попытка подключения к:', error.config?.baseURL + error.config?.url);
+        console.error('Решение: настройте CORS на бэкенде для разрешения запросов с:', window.location.origin);
+        console.error('Подробности: см. CORS_FIX.md');
       }
     }
 

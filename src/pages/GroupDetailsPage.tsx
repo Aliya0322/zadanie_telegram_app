@@ -40,7 +40,6 @@ const GroupDetailsPage = () => {
   const [group, setGroup] = useState<Group | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
-  const [homeworkTitle, setHomeworkTitle] = useState('');
   const [homeworkDescription, setHomeworkDescription] = useState('');
   const [homeworkDueDate, setHomeworkDueDate] = useState('');
   const [homeworkFiles, setHomeworkFiles] = useState<File[]>([]);
@@ -586,7 +585,6 @@ const GroupDetailsPage = () => {
     if (homeworkId) {
       const homeworkItem = homework.find(hw => String(hw.id) === homeworkId);
       if (homeworkItem) {
-        setHomeworkTitle(homeworkItem.description); // Используем description вместо title
         setHomeworkDescription(homeworkItem.description);
         // Преобразуем ISO дату в формат YYYY-MM-DD для input type="date"
         const dueDate = new Date(homeworkItem.deadline);
@@ -604,7 +602,6 @@ const GroupDetailsPage = () => {
 
   const handleCloseHomeworkModal = () => {
     setIsHomeworkModalOpen(false);
-    setHomeworkTitle('');
     setHomeworkDescription('');
     setHomeworkDueDate('');
     setHomeworkFiles([]);
@@ -650,7 +647,7 @@ const GroupDetailsPage = () => {
   const handleSubmitHomework = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!homeworkTitle.trim() || !homeworkDescription.trim() || !homeworkDueDate || !id) {
+    if (!homeworkDescription.trim() || !homeworkDueDate || !id) {
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.showAlert('Пожалуйста, заполните все обязательные поля');
       } else {
@@ -1029,21 +1026,6 @@ const GroupDetailsPage = () => {
             <form onSubmit={handleSubmitHomework} className={styles.homeworkForm}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>
-                  Тема задания <span className={styles.requiredStar}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={homeworkTitle}
-                  onChange={(e) => setHomeworkTitle(e.target.value)}
-                  placeholder="Например: Квадратные уравнения"
-                  className={styles.formInput}
-                  required
-                  disabled={isCreatingHomework}
-                />
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
                   Описание задания <span className={styles.requiredStar}>*</span>
                 </label>
                 <textarea
@@ -1122,21 +1104,21 @@ const GroupDetailsPage = () => {
               
               <div className={styles.formActions}>
                 <button
+                  type="submit"
+                  className={styles.formSubmitButton}
+                  disabled={isCreatingHomework || !homeworkDescription.trim() || !homeworkDueDate}
+                >
+                  {isCreatingHomework 
+                    ? (editingHomeworkId ? 'Сохранение...' : 'Создание...') 
+                    : (editingHomeworkId ? 'Сохранить изменения' : 'Создать задание')}
+                </button>
+                <button
                   type="button"
                   onClick={handleCloseHomeworkModal}
                   className={styles.formCancelButton}
                   disabled={isCreatingHomework}
                 >
                   Отмена
-                </button>
-                <button
-                  type="submit"
-                  className={styles.formSubmitButton}
-                  disabled={isCreatingHomework || !homeworkTitle.trim() || !homeworkDescription.trim() || !homeworkDueDate}
-                >
-                  {isCreatingHomework 
-                    ? (editingHomeworkId ? 'Сохранение...' : 'Создание...') 
-                    : (editingHomeworkId ? 'Сохранить изменения' : 'Создать задание')}
                 </button>
               </div>
             </form>
