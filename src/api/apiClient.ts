@@ -41,18 +41,48 @@ let cachedInitData: string | null = null;
 
 // Функция для инициализации кэша при загрузке модуля
 const initializeInitDataCache = () => {
-  if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  // Сначала проверяем Telegram WebApp SDK
+  if (!window.Telegram?.WebApp) {
+    // Если SDK еще не загружен, пробуем получить из URL параметров
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlInitData = urlParams.get('tgWebAppData') || urlParams.get('_tgWebAppData');
+    if (urlInitData && urlInitData.trim().length > 0) {
+      cachedInitData = urlInitData;
+      console.log('[API] InitData cache initialized from URL params');
+      return;
+    }
     return;
   }
 
   const webApp = window.Telegram.WebApp;
   
-  // Список источников для инициализации
+  // Список источников для инициализации (расширенный список)
   const initSources = [
     () => (webApp as any).initData,
     () => (webApp as any).initDataRaw,
+    () => {
+      // Попробуем получить через initDataUnsafe и собрать строку
+      if (webApp.initDataUnsafe && Object.keys(webApp.initDataUnsafe).length > 0) {
+        // Это не полный initData, но может быть полезно для отладки
+        return null;
+      }
+      return null;
+    },
     () => new URLSearchParams(window.location.search).get('tgWebAppData'),
     () => new URLSearchParams(window.location.search).get('_tgWebAppData'),
+    () => {
+      // Проверяем hash часть URL
+      const hash = window.location.hash;
+      if (hash) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        return hashParams.get('tgWebAppData') || hashParams.get('_tgWebAppData');
+      }
+      return null;
+    },
   ];
 
   for (const getSource of initSources) {
@@ -71,11 +101,15 @@ const initializeInitDataCache = () => {
 
 // Пытаемся инициализировать кэш сразу, если доступно
 if (typeof window !== 'undefined') {
+  // Сначала пробуем получить из URL параметров (доступно сразу)
+  initializeInitDataCache();
+  
   // Пробуем сразу, если SDK уже загружен
   if (window.Telegram?.WebApp) {
     initializeInitDataCache();
   } else {
     // Иначе пробуем через небольшую задержку и еще раз через большую задержку
+    // Это важно для случаев, когда SDK загружается асинхронно
     setTimeout(() => {
       initializeInitDataCache();
     }, 100);
@@ -84,7 +118,13 @@ if (typeof window !== 'undefined') {
       if (!cachedInitData) {
         initializeInitDataCache();
       }
-    }, 1000);
+    }, 500);
+    
+    setTimeout(() => {
+      if (!cachedInitData) {
+        initializeInitDataCache();
+      }
+    }, 2000);
   }
 }
 
@@ -112,11 +152,26 @@ const getTelegramInitData = (): string | null => {
     { name: 'webApp.initData', get: () => (webApp as any).initData },
     // 2. Альтернативный способ - webApp.initDataRaw
     { name: 'webApp.initDataRaw', get: () => (webApp as any).initDataRaw },
-    // 3. URL параметр tgWebAppData (из search)
+    // 3. Попробуем получить через другие свойства webApp
+    { 
+      name: 'webApp alternative properties', 
+      get: () => {
+        // Иногда initData может быть в других свойствах
+        const altProps = ['initDataString', 'rawInitData', 'telegramInitData'];
+        for (const prop of altProps) {
+          const value = (webApp as any)[prop];
+          if (value && typeof value === 'string' && value.trim().length > 0) {
+            return value;
+          }
+        }
+        return null;
+      }
+    },
+    // 4. URL параметр tgWebAppData (из search) - проверяем раньше, т.к. доступен сразу
     { name: 'URL search tgWebAppData', get: () => new URLSearchParams(window.location.search).get('tgWebAppData') },
-    // 4. URL параметр _tgWebAppData (с подчеркиванием)
+    // 5. URL параметр _tgWebAppData (с подчеркиванием)
     { name: 'URL search _tgWebAppData', get: () => new URLSearchParams(window.location.search).get('_tgWebAppData') },
-    // 5. Проверяем hash часть URL
+    // 6. Проверяем hash часть URL
     { 
       name: 'URL hash', 
       get: () => {
@@ -128,7 +183,7 @@ const getTelegramInitData = (): string | null => {
         return null;
       }
     },
-    // 6. Попробуем получить из полного URL (может быть в разных местах)
+    // 7. Попробуем получить из полного URL (может быть в разных местах)
     { 
       name: 'Full URL', 
       get: () => {
@@ -141,13 +196,28 @@ const getTelegramInitData = (): string | null => {
         }
       }
     },
-    // 7. Попробуем получить из window.location.search напрямую (на случай разных форматов)
+    // 8. Попробуем получить из window.location.search напрямую (на случай разных форматов)
     {
       name: 'Direct search params',
       get: () => {
         const search = window.location.search;
         const match = search.match(/[?&](?:tgWebAppData|_tgWebAppData)=([^&]+)/);
         return match ? decodeURIComponent(match[1]) : null;
+      }
+    },
+    // 9. Попробуем получить из document.referrer (если открыто через редирект)
+    {
+      name: 'Document referrer',
+      get: () => {
+        try {
+          if (document.referrer) {
+            const referrerUrl = new URL(document.referrer);
+            return referrerUrl.searchParams.get('tgWebAppData') || referrerUrl.searchParams.get('_tgWebAppData');
+          }
+        } catch {
+          // Игнорируем ошибки парсинга referrer
+        }
+        return null;
       }
     },
   ];
@@ -220,6 +290,7 @@ apiClient.interceptors.request.use(
         });
         
         // Пытаемся инициализировать кэш еще раз прямо перед запросом
+        // Делаем несколько попыток с разными задержками
         initializeInitDataCache();
         
         // Если кэш обновился, пробуем использовать его
@@ -227,15 +298,42 @@ apiClient.interceptors.request.use(
           console.log('[API] ✅ InitData found after retry, adding to request');
           config.headers['X-Telegram-Init-Data'] = cachedInitData;
         } else {
-          console.error('[API] ❌ InitData still not found after retry');
-          console.error('[API] Detailed debug info:', {
-            hasTelegramWebApp: !!window.Telegram?.WebApp,
-            platform: window.Telegram?.WebApp?.platform,
-            version: window.Telegram?.WebApp?.version,
-            url: window.location.href,
-            search: window.location.search,
-            hash: window.location.hash,
-          });
+          // Проверяем, есть ли Telegram WebApp вообще
+          if (window.Telegram?.WebApp) {
+            const webApp = window.Telegram.WebApp;
+            console.error('[API] ❌ InitData still not found after retry');
+            console.error('[API] Detailed debug info:', {
+              hasTelegramWebApp: true,
+              platform: webApp.platform,
+              version: webApp.version,
+              url: window.location.href,
+              search: window.location.search,
+              hash: window.location.hash,
+              hasInitDataProp: !!(webApp as any).initData,
+              hasInitDataRawProp: !!(webApp as any).initDataRaw,
+              initDataUnsafe: webApp.initDataUnsafe ? 'exists' : 'not exists',
+            });
+            
+            // Попробуем получить initData напрямую из всех возможных свойств
+            const directInitData = 
+              (webApp as any).initData || 
+              (webApp as any).initDataRaw ||
+              (webApp as any).initDataString ||
+              null;
+            
+            if (directInitData && typeof directInitData === 'string' && directInitData.trim().length > 0) {
+              cachedInitData = directInitData;
+              console.log('[API] ✅ InitData found directly from webApp properties');
+              config.headers['X-Telegram-Init-Data'] = directInitData;
+            }
+          } else {
+            console.error('[API] ❌ Telegram WebApp SDK not available!');
+            console.error('[API] User may not be in Telegram WebApp context');
+            console.error('[API] This usually means:', {
+              message: 'Приложение должно быть открыто через Telegram',
+              solution: 'Откройте приложение через ссылку в Telegram',
+            });
+          }
         }
       }
       
@@ -320,6 +418,11 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Экспортируем функцию для проверки наличия initData (для использования в компонентах)
+export const hasTelegramInitData = (): boolean => {
+  return getTelegramInitData() !== null;
+};
 
 export default apiClient;
 

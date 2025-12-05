@@ -6,6 +6,7 @@ import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import { timezones, getDefaultTimezone } from '../utils/timezones';
 import { login as authLogin, getCurrentUser, type UpdateRoleRequest, type UserFrontend } from '../api/authApi';
+import { hasTelegramInitData } from '../api/apiClient';
 import logo from '../assets/images/logo.png';
 import styles from './Login.module.css';
 
@@ -194,6 +195,24 @@ const LoginPage: React.FC = () => {
       }
     }
 
+    // Проверяем наличие initData перед отправкой формы
+    // Это важно для случаев, когда пользователь переходит по ссылке приглашения
+    if (!hasTelegramInitData()) {
+      const errorMsg = 'Не удалось получить данные авторизации Telegram.\n\n' +
+        'Пожалуйста, убедитесь, что:\n' +
+        '1. Вы открыли приложение через Telegram\n' +
+        '2. Вы перешли по ссылке приглашения в Telegram\n' +
+        '3. Приложение открыто в контексте Telegram WebApp\n\n' +
+        'Если проблема сохраняется, попробуйте закрыть и открыть приложение заново через Telegram.';
+      
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert(errorMsg);
+      } else {
+        alert(errorMsg);
+      }
+      return;
+    }
+
     setIsLoading(true);
     
     // Подготавливаем данные для регистрации (объявляем вне try, чтобы использовать в catch)
@@ -254,18 +273,44 @@ const LoginPage: React.FC = () => {
       if (error?.response?.status === 422) {
         // Ошибка валидации данных
         const detail = error.response?.data?.detail;
+        
+        // Проверяем, связана ли ошибка с отсутствием X-Telegram-Init-Data заголовка
+        let isInitDataError = false;
+        
         if (Array.isArray(detail)) {
           // FastAPI возвращает массив ошибок валидации
           const errors = detail.map((err: any) => {
             const field = err.loc?.join('.') || 'unknown';
             const message = err.msg || 'Invalid value';
+            
+            // Проверяем, связана ли ошибка с initData
+            if (field.includes('X-Telegram-Init-Data') || field.includes('init') || field.includes('header')) {
+              isInitDataError = true;
+            }
+            
             return `${field}: ${message}`;
           }).join('\n');
-          errorMessage = `Ошибка валидации данных:\n${errors}`;
+          
+          if (isInitDataError) {
+            errorMessage = 'Ошибка авторизации Telegram. Пожалуйста, убедитесь, что:\n\n' +
+              '1. Вы открыли приложение через Telegram\n' +
+              '2. Вы нажали на ссылку приглашения в Telegram\n' +
+              '3. Приложение открыто в контексте Telegram WebApp\n\n' +
+              'Если проблема сохраняется, попробуйте закрыть и открыть приложение заново через Telegram.';
+          } else {
+            errorMessage = `Ошибка валидации данных:\n${errors}`;
+          }
         } else if (typeof detail === 'string') {
           errorMessage = detail;
+          // Проверяем, содержит ли сообщение об ошибке упоминание initData
+          if (detail.toLowerCase().includes('init') || detail.toLowerCase().includes('telegram') || detail.toLowerCase().includes('header')) {
+            errorMessage = 'Ошибка авторизации Telegram. Пожалуйста, убедитесь, что вы открыли приложение через Telegram.';
+          }
         } else if (error.response?.data?.message) {
           errorMessage = error.response.data.message;
+          if (errorMessage.toLowerCase().includes('init') || errorMessage.toLowerCase().includes('telegram') || errorMessage.toLowerCase().includes('header')) {
+            errorMessage = 'Ошибка авторизации Telegram. Пожалуйста, убедитесь, что вы открыли приложение через Telegram.';
+          }
         } else {
           errorMessage = 'Ошибка валидации данных. Проверьте введенные данные.';
         }
@@ -274,6 +319,7 @@ const LoginPage: React.FC = () => {
           status: 422,
           data: error.response?.data,
           sentData: updateData,
+          isInitDataError,
         });
       } else if (error?.response?.status === 401) {
         errorMessage = 'Ошибка авторизации. Проверьте, что вы открыли приложение через Telegram.';
