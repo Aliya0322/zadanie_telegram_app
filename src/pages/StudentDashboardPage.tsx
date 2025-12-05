@@ -15,12 +15,13 @@ import type { Homework } from '../api/homeworkApi';
 import { getHomeworkByGroup } from '../api/homeworkApi';
 import { getGroups } from '../api/groupsApi';
 import { getScheduleByGroup, type Schedule } from '../api/scheduleApi';
-import { formatDateTime, isPast } from '../utils/timeFormat';
+import { formatDate, formatDateTime, isPast } from '../utils/timeFormat';
 import styles from '../features/Groups/Dashboard.module.css';
 
 interface ScheduleItem {
   dayOfWeek: string;
   time: string;
+  endTime: string;
   title: string;
   group: string;
   groupId: number;
@@ -30,6 +31,7 @@ interface NextClass {
   date: Date;
   dayOfWeek: string;
   time: string;
+  endTime: string;
   title: string;
   group: string;
 }
@@ -82,6 +84,21 @@ const StudentDashboardPage = () => {
     const hours = parts[0]?.padStart(2, '0') || '00';
     const minutes = parts[1]?.padStart(2, '0') || '00';
     return `${hours}:${minutes}`;
+  };
+
+  // Вычислить время окончания на основе времени начала и длительности
+  const calculateEndTime = (startTime: string, durationMinutes: number | null): string => {
+    const defaultDuration = 90; // По умолчанию 90 минут
+    const duration = durationMinutes || defaultDuration;
+    
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const startDate = new Date();
+    startDate.setHours(hours, minutes, 0, 0);
+    startDate.setMinutes(startDate.getMinutes() + duration);
+    
+    const endHours = startDate.getHours().toString().padStart(2, '0');
+    const endMinutes = startDate.getMinutes().toString().padStart(2, '0');
+    return `${endHours}:${endMinutes}`;
   };
 
   // Получить номер дня недели (0 = воскресенье, 1 = понедельник, ...)
@@ -139,6 +156,7 @@ const StudentDashboardPage = () => {
           date: nextClassDate,
           dayOfWeek,
           time: item.time,
+          endTime: item.endTime,
           title: item.title,
           group: groupName,
         };
@@ -180,13 +198,18 @@ const StudentDashboardPage = () => {
       // Получаем расписание группы
       try {
         const groupSchedule = await getScheduleByGroup(activeGroup.id);
-        const transformedSchedule: ScheduleItem[] = groupSchedule.map((s: Schedule) => ({
-          dayOfWeek: formatDayOfWeek(s.dayOfWeek),
-          time: formatTime(s.timeAt),
-          title: activeGroup.name, // Используем название группы как название предмета
-          group: activeGroup.name,
-          groupId: activeGroup.id,
-        }));
+        const transformedSchedule: ScheduleItem[] = groupSchedule.map((s: Schedule) => {
+          const startTime = formatTime(s.timeAt);
+          const endTime = calculateEndTime(startTime, s.duration);
+          return {
+            dayOfWeek: formatDayOfWeek(s.dayOfWeek),
+            time: startTime,
+            endTime: endTime,
+            title: activeGroup.name, // Используем название группы как название предмета
+            group: activeGroup.name,
+            groupId: activeGroup.id,
+          };
+        });
         setSchedule(transformedSchedule);
 
         // Находим ближайшее занятие
@@ -288,10 +311,9 @@ const StudentDashboardPage = () => {
               <div key={index} className={styles.scheduleItem}>
                 <ClockIcon className={styles.clockIcon} />
                 <div className={styles.scheduleItemContent}>
-                  <span className={styles.scheduleTime}>{item.dayOfWeek}, {item.time}</span>
+                  <span className={styles.scheduleTime}>{item.dayOfWeek} {item.time} - {item.endTime}</span>
                   <span className={styles.scheduleSeparator}> - </span>
-                  <span className={styles.scheduleSubject}>{item.title}</span>
-                  <span className={styles.scheduleGroup}>({item.group})</span>
+                  <span className={styles.scheduleGroup}>{item.group}</span>
                 </div>
               </div>
             ))
@@ -310,9 +332,8 @@ const StudentDashboardPage = () => {
                   <div className={styles.nextClassContent}>
                     <span className={styles.scheduleSubject}>{nextClass.title}</span>
                     <span className={styles.nextClassDate}>
-                      {formatDateShort(nextClass.date)}, {nextClass.dayOfWeek}, {nextClass.time}
+                      {formatDateShort(nextClass.date)}, {nextClass.dayOfWeek}, {nextClass.time} - {nextClass.endTime}
                     </span>
-                    <span className={styles.scheduleGroup}>({nextClass.group})</span>
                   </div>
                 </div>
               </div>
@@ -338,7 +359,7 @@ const StudentDashboardPage = () => {
           </div>
         ) : (
             <div className={styles.groupsList}>
-            {activeHomework.map((homework) => {
+            {activeHomework.slice(0, 1).map((homework) => {
               const deadlineStatus = getDeadlineStatus(homework.deadline);
 
               return (
@@ -370,7 +391,7 @@ const StudentDashboardPage = () => {
                           {deadlineStatus.text}
                             </div>
                             <span className={styles.deadlineText}>
-                          До: {formatDateTime(homework.deadline)}
+                          До: {formatDate(homework.deadline)}
                         </span>
                           </div>
                         </div>

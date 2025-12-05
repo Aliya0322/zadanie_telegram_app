@@ -491,6 +491,7 @@
   color: #4b5563;
   margin-bottom: 12px;
   padding: 0 4px;
+  text-align: left;
 }
 
 @media (max-width: 480px) {
@@ -528,7 +529,7 @@
 
 .groupCardContent {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 16px;
   gap: 12px;
   box-sizing: border-box;
