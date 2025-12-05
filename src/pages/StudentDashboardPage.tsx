@@ -87,7 +87,7 @@ const StudentDashboardPage = () => {
       // В реальном приложении здесь будет API для получения заданий студента
       // Пока используем моковые данные
       // Моковые данные с файлами (в реальном приложении файлы будут приходить с API)
-      const mockHomework: (Homework & { files?: string[] })[] = [
+      const mockHomework: Homework[] = [
         {
           id: 1,
           groupId: 1,
@@ -95,7 +95,22 @@ const StudentDashboardPage = () => {
           deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // через 2 дня
           createdAt: new Date().toISOString(),
           reminderSent: false,
-          files: ['Учебник_стр_45.pdf', 'Дополнительные_задачи.docx'],
+          files: [
+            {
+              id: 101,
+              fileName: 'Учебник_стр_45.pdf',
+              fileUrl: '#',
+              fileSize: 1024 * 1024 * 2.5,
+              uploadedAt: new Date().toISOString()
+            },
+            {
+              id: 102,
+              fileName: 'Дополнительные_задачи.docx',
+              fileUrl: '#',
+              fileSize: 1024 * 500,
+              uploadedAt: new Date().toISOString()
+            }
+          ],
         },
         {
           id: 2,
@@ -104,7 +119,15 @@ const StudentDashboardPage = () => {
           deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // через 5 дней
           createdAt: new Date().toISOString(),
           reminderSent: false,
-          files: ['Тригонометрия_задачи.pdf'],
+          files: [
+            {
+              id: 103,
+              fileName: 'Тригонометрия_задачи.pdf',
+              fileUrl: '#',
+              fileSize: 1024 * 1024 * 1.2,
+              uploadedAt: new Date().toISOString()
+            }
+          ],
         },
       ];
       setActiveHomework(mockHomework);
@@ -308,25 +331,25 @@ const StudentDashboardPage = () => {
               </div>
 
               {/* Прикрепленные файлы */}
-              {(selectedHomework as any).files && (selectedHomework as any).files.length > 0 && (
+              {selectedHomework.files && selectedHomework.files.length > 0 && (
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Прикрепленные файлы</label>
                   <div className={styles.fileList}>
-                    {(selectedHomework as any).files.map((file: string, index: number) => (
-                      <div key={index} className={styles.fileItem}>
+                    {selectedHomework.files.map((file, index) => (
+                      <div key={file.id || index} className={styles.fileItem}>
                         <PaperClipIcon className={`${styles.fileIcon} ${styles.fileIconBlue}`} />
                         <span 
                           className={`${styles.fileName} ${styles.clickableFile}`}
                           onClick={() => {
                             // В реальном приложении здесь будет открытие файла
                             if (window.Telegram?.WebApp) {
-                              window.Telegram.WebApp.showAlert(`Файл: ${file}\n\nВ реальном приложении здесь будет ссылка для скачивания файла.`);
+                              window.Telegram.WebApp.showAlert(`Файл: ${file.fileName}\n\nВ реальном приложении здесь будет ссылка для скачивания файла.`);
                             } else {
-                              alert(`Файл: ${file}\n\nВ реальном приложении здесь будет ссылка для скачивания файла.`);
+                              alert(`Файл: ${file.fileName}\n\nВ реальном приложении здесь будет ссылка для скачивания файла.`);
                             }
                           }}
                         >
-                          {file}
+                          {file.fileName}
                         </span>
                       </div>
                     ))}
