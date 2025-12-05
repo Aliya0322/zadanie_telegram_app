@@ -995,7 +995,7 @@ const GroupDetailsPage = () => {
             </div>
 
             {/* Блок приглашения внизу */}
-            {group?.inviteCode && (
+            {group && (
               <div className={styles.section}>
                 <div className={styles.inviteHeader}>
                   <h2 className={styles.sectionTitle}>ПРИГЛАШЕНИЕ УЧЕНИКОВ</h2>
