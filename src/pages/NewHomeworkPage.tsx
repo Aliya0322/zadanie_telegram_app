@@ -14,7 +14,6 @@ const NewHomeworkPage = () => {
   const [taskText, setTaskText] = useState('');
   const [deadline, setDeadline] = useState('');
   const [sendPush, setSendPush] = useState(true);
-  const [files, setFiles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = useCallback(async () => {
@@ -86,17 +85,6 @@ const NewHomeworkPage = () => {
     }
   }, [webApp, taskText, deadline]);
 
-  const handleFileAttach = () => {
-    // Здесь будет логика для загрузки файла через API Telegram (sendDocument)
-    console.log('Запуск механизма прикрепления файла');
-    // В MVP можно просто запрашивать ссылку на файл в отдельном поле.
-    setFiles([...files, `файл_${files.length + 1}.pdf`]);
-  };
-
-  const handleRemoveFile = (index: number) => {
-    setFiles(files.filter((_, i) => i !== index));
-  };
-
   const handleCancel = () => {
     if (webApp) {
       webApp.close();
@@ -134,31 +122,6 @@ const NewHomeworkPage = () => {
           onChange={(e) => setDeadline(e.target.value)}
         />
       </List>
-
-      <Block title="Прикрепленные файлы" className="mt-4">
-        <div className="flex flex-wrap gap-2 mb-4">
-          {files.map((file, index) => (
-            <div
-              key={index}
-              className="bg-blue-100 text-blue-700 text-sm py-1 px-3 rounded-full flex items-center"
-            >
-              {file}
-              <span
-                className="ml-2 cursor-pointer font-bold"
-                onClick={() => handleRemoveFile(index)}
-              >
-                &times;
-              </span>
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={handleFileAttach}
-          className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
-        >
-          📎 Добавить файл
-        </button>
-      </Block>
 
       <List strong className="mt-4">
         <ListItem

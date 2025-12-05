@@ -8,15 +8,6 @@ export interface Homework {
   deadline: string; // ISO datetime string
   createdAt: string; // ISO datetime string
   reminderSent: boolean;
-  files?: HomeworkFile[]; // Файлы задания
-}
-
-export interface HomeworkFile {
-  id: number;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  uploadedAt: string;
 }
 
 export interface HomeworkSubmission {
@@ -40,7 +31,6 @@ export interface CreateHomeworkDto {
   description: string;
   groupId: string; // Конвертируется в groupId при отправке
   dueDate: string; // Конвертируется в deadline при отправке (ISO datetime string)
-  files?: File[]; // Файлы для загрузки
 }
 
 // DTO для обновления домашнего задания (соответствует HomeworkUpdate из бэкенда)
@@ -63,28 +53,7 @@ export const getHomeworkById = async (id: string): Promise<Homework> => {
 
 // Создать новое домашнее задание для группы
 // Бэкенд ожидает: description, deadline (groupId берется из URL)
-// Если есть файлы, отправляем через FormData, иначе через JSON
 export const createHomework = async (groupId: string, data: CreateHomeworkDto): Promise<Homework> => {
-  // Если есть файлы, используем FormData
-  if (data.files && data.files.length > 0) {
-    const formData = new FormData();
-    formData.append('description', data.description);
-    formData.append('deadline', data.dueDate);
-    
-    // Добавляем все файлы
-    data.files.forEach((file) => {
-      formData.append('files', file);
-    });
-    
-    const response = await apiClient.post<Homework>(`/groups/${groupId}/homework`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  }
-  
-  // Если файлов нет, отправляем как JSON
   const requestData: CreateHomeworkRequestDto = {
     description: data.description,
     deadline: data.dueDate,
@@ -94,33 +63,7 @@ export const createHomework = async (groupId: string, data: CreateHomeworkDto): 
 };
 
 // Обновить домашнее задание
-// Если есть файлы, отправляем через FormData, иначе через JSON
 export const updateHomework = async (id: string, data: Partial<CreateHomeworkDto>): Promise<Homework> => {
-  // Если есть файлы, используем FormData
-  if (data.files && data.files.length > 0) {
-    const formData = new FormData();
-    
-    if (data.description !== undefined) {
-      formData.append('description', data.description);
-    }
-    if (data.dueDate !== undefined) {
-      formData.append('deadline', data.dueDate);
-    }
-    
-    // Добавляем все файлы
-    data.files.forEach((file) => {
-      formData.append('files', file);
-    });
-    
-    const response = await apiClient.put<Homework>(`/homework/${id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  }
-  
-  // Если файлов нет, отправляем как JSON
   const requestData: UpdateHomeworkRequestDto = {};
   if (data.description !== undefined) {
     requestData.description = data.description;

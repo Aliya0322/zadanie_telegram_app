@@ -7,8 +7,7 @@ import {
   DocumentTextIcon,
   ArrowLeftIcon,
   EllipsisVerticalIcon,
-  XMarkIcon,
-  PaperClipIcon
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
@@ -95,22 +94,6 @@ const StudentDashboardPage = () => {
           deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // через 2 дня
           createdAt: new Date().toISOString(),
           reminderSent: false,
-          files: [
-            {
-              id: 101,
-              fileName: 'Учебник_стр_45.pdf',
-              fileUrl: '#',
-              fileSize: 1024 * 1024 * 2.5,
-              uploadedAt: new Date().toISOString()
-            },
-            {
-              id: 102,
-              fileName: 'Дополнительные_задачи.docx',
-              fileUrl: '#',
-              fileSize: 1024 * 500,
-              uploadedAt: new Date().toISOString()
-            }
-          ],
         },
         {
           id: 2,
@@ -119,15 +102,6 @@ const StudentDashboardPage = () => {
           deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // через 5 дней
           createdAt: new Date().toISOString(),
           reminderSent: false,
-          files: [
-            {
-              id: 103,
-              fileName: 'Тригонометрия_задачи.pdf',
-              fileUrl: '#',
-              fileSize: 1024 * 1024 * 1.2,
-              uploadedAt: new Date().toISOString()
-            }
-          ],
         },
       ];
       setActiveHomework(mockHomework);
@@ -330,32 +304,6 @@ const StudentDashboardPage = () => {
                 </div>
               </div>
 
-              {/* Прикрепленные файлы */}
-              {selectedHomework.files && selectedHomework.files.length > 0 && (
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Прикрепленные файлы</label>
-                  <div className={styles.fileList}>
-                    {selectedHomework.files.map((file, index) => (
-                      <div key={file.id || index} className={styles.fileItem}>
-                        <PaperClipIcon className={`${styles.fileIcon} ${styles.fileIconBlue}`} />
-                        <span 
-                          className={`${styles.fileName} ${styles.clickableFile}`}
-                          onClick={() => {
-                            // В реальном приложении здесь будет открытие файла
-                            if (window.Telegram?.WebApp) {
-                              window.Telegram.WebApp.showAlert(`Файл: ${file.fileName}\n\nВ реальном приложении здесь будет ссылка для скачивания файла.`);
-                            } else {
-                              alert(`Файл: ${file.fileName}\n\nВ реальном приложении здесь будет ссылка для скачивания файла.`);
-                            }
-                          }}
-                        >
-                          {file.fileName}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

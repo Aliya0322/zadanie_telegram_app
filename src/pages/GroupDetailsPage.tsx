@@ -7,7 +7,6 @@ import {
   UserGroupIcon,
   ArrowLeftIcon,
   EllipsisVerticalIcon,
-  PaperClipIcon,
   PlusIcon,
   XMarkIcon,
   LinkIcon,
@@ -42,7 +41,6 @@ const GroupDetailsPage = () => {
   const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
   const [homeworkDescription, setHomeworkDescription] = useState('');
   const [homeworkDueDate, setHomeworkDueDate] = useState('');
-  const [homeworkFiles, setHomeworkFiles] = useState<File[]>([]);
   const [isCreatingHomework, setIsCreatingHomework] = useState(false);
   const [isInviteLinkVisible, setIsInviteLinkVisible] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
@@ -648,44 +646,7 @@ const GroupDetailsPage = () => {
     setIsHomeworkModalOpen(false);
     setHomeworkDescription('');
     setHomeworkDueDate('');
-    setHomeworkFiles([]);
     setEditingHomeworkId(null);
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const validFiles = Array.from(files).filter(file => {
-        const fileExtension = file.name.split('.').pop()?.toLowerCase();
-        const validExtensions = ['pdf', 'doc', 'docx', 'mp3', 'jpeg', 'jpg', 'png'];
-        return fileExtension && validExtensions.includes(fileExtension);
-      });
-      
-      if (validFiles.length !== files.length) {
-        if (window.Telegram?.WebApp) {
-          window.Telegram.WebApp.showAlert('Разрешены только файлы: PDF, Word (doc, docx), MP3, изображения (jpeg, jpg, png)');
-        } else {
-          alert('Разрешены только файлы: PDF, Word (doc, docx), MP3, изображения (jpeg, jpg, png)');
-        }
-      }
-      
-      setHomeworkFiles(prev => [...prev, ...validFiles]);
-    }
-    // Сброс input для возможности выбрать тот же файл снова
-    e.target.value = '';
-  };
-
-  const handleRemoveFile = (index: number) => {
-    setHomeworkFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const getFileIcon = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    if (extension === 'pdf') return '📄';
-    if (['doc', 'docx'].includes(extension || '')) return '📝';
-    if (extension === 'mp3') return '🎵';
-    if (['jpeg', 'jpg', 'png'].includes(extension || '')) return '🖼️';
-    return '📎';
   };
 
   const handleSubmitHomework = async (e: React.FormEvent) => {
@@ -706,7 +667,6 @@ const GroupDetailsPage = () => {
         description: homeworkDescription.trim(),
         groupId: id || '',
         dueDate: new Date(homeworkDueDate).toISOString(),
-        files: homeworkFiles.length > 0 ? homeworkFiles : undefined, // Добавляем файлы
       };
       
       if (editingHomeworkId) {
@@ -1171,55 +1131,6 @@ const GroupDetailsPage = () => {
                   required
                   disabled={isCreatingHomework}
                 />
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  Прикрепить файлы (PDF, Word, MP3)
-                </label>
-                
-                {/* Список выбранных файлов */}
-                {homeworkFiles.length > 0 && (
-                  <div className={styles.fileList}>
-                    {homeworkFiles.map((file, index) => (
-                      <div key={index} className={styles.fileItem}>
-                        <span className={styles.fileIcon}>{getFileIcon(file.name)}</span>
-                        <span className={styles.fileName} title={file.name}>
-                          {file.name.length > 30 ? `${file.name.substring(0, 30)}...` : file.name}
-                        </span>
-                        <span className={styles.fileSize}>
-                          ({(file.size / 1024).toFixed(1)} KB)
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFile(index)}
-                          className={styles.fileRemoveButton}
-                          disabled={isCreatingHomework}
-                          aria-label="Удалить файл"
-                        >
-                          <XMarkIcon className={styles.fileRemoveIcon} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Кнопка для выбора файлов */}
-                <label className={styles.fileUploadButton}>
-                  <PaperClipIcon className={styles.fileUploadIcon} />
-                  <span>Выбрать файлы</span>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.mp3,.jpeg,.jpg,.png"
-                    multiple
-                    onChange={handleFileSelect}
-                    className={styles.fileInput}
-                    disabled={isCreatingHomework}
-                  />
-                </label>
-                <div className={styles.fileHint}>
-                  Разрешены файлы: PDF, Word (doc, docx), MP3, изображения (jpeg, jpg, png)
-                </div>
               </div>
               
               <div className={styles.formActions}>
