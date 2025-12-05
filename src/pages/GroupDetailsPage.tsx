@@ -706,6 +706,7 @@ const GroupDetailsPage = () => {
         description: homeworkDescription.trim(),
         groupId: id || '',
         dueDate: new Date(homeworkDueDate).toISOString(),
+        files: homeworkFiles.length > 0 ? homeworkFiles : undefined, // Добавляем файлы
       };
       
       if (editingHomeworkId) {
