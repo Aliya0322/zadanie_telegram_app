@@ -47,20 +47,34 @@ export interface DashboardData {
   activeHomework: Homework[];
 }
 
+// Helper to get value from object with camelCase or snake_case key
+const getVal = (obj: any, camel: string, snake?: string) => {
+  if (!obj) return undefined;
+  if (obj[camel] !== undefined) return obj[camel];
+  if (snake && obj[snake] !== undefined) return obj[snake];
+  return undefined;
+};
+
 // Преобразование DashboardGroupResponse в Group (используем только доступные поля)
-const transformDashboardGroup = (apiData: DashboardGroupResponse): Group => {
+const transformDashboardGroup = (apiData: any): Group => {
+  // Поддержка и camelCase и snake_case
+  const id = getVal(apiData, 'id');
+  const name = getVal(apiData, 'name');
+  const inviteCode = getVal(apiData, 'inviteCode', 'invite_code');
+  const studentCount = getVal(apiData, 'studentCount', 'student_count') || 0;
+
   // Создаем массив "моковых" student IDs для отображения количества
   // В реальности, если нужны реальные ID студентов, нужно запросить полную информацию о группе
   // Если studentCount равен 0 или меньше, создаем пустой массив
-  const studentIds: number[] = apiData.studentCount > 0 
-    ? Array(apiData.studentCount).fill(0).map((_, i) => i + 1)
+  const studentIds: number[] = studentCount > 0 
+    ? Array(studentCount).fill(0).map((_, i) => i + 1)
     : [];
   
   return {
-    id: apiData.id,
-    name: apiData.name,
+    id: Number(id),
+    name: name || '',
     teacherId: 0, // Не предоставляется в DashboardGroupResponse
-    inviteCode: apiData.inviteCode,
+    inviteCode: inviteCode || '',
     isActive: true, // Предполагаем активную группу
     createdAt: '', // Не предоставляется в DashboardGroupResponse
     students: studentIds,
@@ -68,31 +82,43 @@ const transformDashboardGroup = (apiData: DashboardGroupResponse): Group => {
 };
 
 // Преобразование TodayScheduleResponse в ScheduleItem
-const transformTodaySchedule = (apiData: TodayScheduleResponse): ScheduleItem => {
+const transformTodaySchedule = (apiData: any): ScheduleItem => {
+  const id = getVal(apiData, 'id');
+  const groupName = getVal(apiData, 'groupName', 'group_name');
+  const dayOfWeek = getVal(apiData, 'dayOfWeek', 'day_of_week');
+  const timeAtRaw = getVal(apiData, 'timeAt', 'time_at') || '';
+  const meetingLink = getVal(apiData, 'meetingLink', 'meeting_link');
+
   // Преобразуем timeAt из формата "HH:MM:SS" в "HH:mm"
-  const timeParts = apiData.timeAt.split(':');
-  const timeAt = `${timeParts[0]}:${timeParts[1]}`;
+  const timeParts = timeAtRaw.split(':');
+  const timeAt = timeParts.length >= 2 ? `${timeParts[0]}:${timeParts[1]}` : timeAtRaw;
   
   return {
-    id: String(apiData.id),
+    id: String(id),
     groupId: '', // Не предоставляется в TodayScheduleResponse
-    groupName: apiData.groupName,
+    groupName: groupName || '',
     startTime: timeAt,
-    dayOfWeek: apiData.dayOfWeek,
-    meetingLink: apiData.meetingLink || undefined,
+    dayOfWeek: dayOfWeek || '',
+    meetingLink: meetingLink || undefined,
   };
 };
 
 // Получить данные для главного экрана
 export const getDashboard = async (): Promise<DashboardData> => {
-  const response = await apiClient.get<DashboardResponse>('/user/dashboard');
+  // Используем any для response.data, чтобы обойти строгую типизацию и проверить snake_case
+  const response = await apiClient.get<any>('/user/dashboard');
   const apiData = response.data;
   
+  const userRole = getVal(apiData, 'userRole', 'user_role');
+  const groups = getVal(apiData, 'groups') || [];
+  const todaySchedule = getVal(apiData, 'todaySchedule', 'today_schedule') || [];
+  const activeHomeworks = getVal(apiData, 'activeHomeworks', 'active_homeworks') || [];
+  
   return {
-    userRole: apiData.userRole,
-    groups: apiData.groups.map(transformDashboardGroup),
-    schedule: apiData.todaySchedule.map(transformTodaySchedule),
-    activeHomework: apiData.activeHomeworks,
+    userRole: userRole,
+    groups: Array.isArray(groups) ? groups.map(transformDashboardGroup) : [],
+    schedule: Array.isArray(todaySchedule) ? todaySchedule.map(transformTodaySchedule) : [],
+    activeHomework: activeHomeworks,
   };
 };
 
@@ -107,11 +133,14 @@ export const getSchedule = async (): Promise<{
   schedule: ScheduleItem[];
   activeHomework: Homework[];
 }> => {
-  const response = await apiClient.get<UserScheduleResponse>('/user/schedule');
+  const response = await apiClient.get<any>('/user/schedule');
   const apiData = response.data;
   
+  const schedules = getVal(apiData, 'schedules') || [];
+  const activeHomeworks = getVal(apiData, 'activeHomeworks', 'active_homeworks') || [];
+  
   return {
-    schedule: apiData.schedules.map(transformTodaySchedule),
-    activeHomework: apiData.activeHomeworks,
+    schedule: Array.isArray(schedules) ? schedules.map(transformTodaySchedule) : [],
+    activeHomework: activeHomeworks,
   };
 };
