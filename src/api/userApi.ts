@@ -109,10 +109,28 @@ export const getDashboard = async (): Promise<DashboardData> => {
   const response = await apiClient.get<any>('/user/dashboard');
   const apiData = response.data;
   
-  const userRole = getVal(apiData, 'userRole', 'user_role') || 'student';
-  const groups = getVal(apiData, 'groups') || [];
-  const todaySchedule = getVal(apiData, 'todaySchedule', 'today_schedule') || [];
-  const activeHomeworks = getVal(apiData, 'activeHomeworks', 'active_homeworks') || [];
+  // Логирование для отладки
+  console.log('[getDashboard] API response:', {
+    hasApiData: !!apiData,
+    apiDataKeys: apiData ? Object.keys(apiData) : [],
+    groupsDirect: apiData?.groups,
+    groupsType: typeof apiData?.groups,
+    groupsIsArray: Array.isArray(apiData?.groups),
+  });
+  
+  // Сначала пробуем прямой доступ (как в старом коде), затем fallback на getVal для snake_case
+  const userRole = apiData?.userRole || getVal(apiData, 'userRole', 'user_role') || 'student';
+  const groups = apiData?.groups || getVal(apiData, 'groups') || [];
+  const todaySchedule = apiData?.todaySchedule || getVal(apiData, 'todaySchedule', 'today_schedule') || [];
+  const activeHomeworks = apiData?.activeHomeworks || getVal(apiData, 'activeHomeworks', 'active_homeworks') || [];
+  
+  console.log('[getDashboard] Extracted data:', {
+    userRole,
+    groupsCount: Array.isArray(groups) ? groups.length : 'not array',
+    groups,
+    todayScheduleCount: Array.isArray(todaySchedule) ? todaySchedule.length : 'not array',
+    activeHomeworksCount: Array.isArray(activeHomeworks) ? activeHomeworks.length : 'not array',
+  });
   
   return {
     userRole: userRole,
