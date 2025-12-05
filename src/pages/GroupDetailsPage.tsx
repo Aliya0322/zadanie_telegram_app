@@ -18,7 +18,7 @@ import {
   PencilIcon
 } from '@heroicons/react/24/outline';
 import { getGroupById, updateGroup, deleteGroup, updateGroupStatus, removeStudentFromGroup, getGroupWithInviteLink } from '../api/groupsApi';
-import type { Group, GroupWithInviteLink } from '../api/groupsApi';
+import type { Group } from '../api/groupsApi';
 import { useTelegram } from '../hooks/useTelegram';
 import { useHomework } from '../features/Homework/hooks/useHomework';
 import type { CreateHomeworkDto } from '../api/homeworkApi';
