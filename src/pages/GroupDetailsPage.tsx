@@ -334,7 +334,12 @@ const GroupDetailsPage = () => {
     setIsLoadingInviteLink(true);
     try {
       const groupWithInvite = await getGroupWithInviteLink(id);
-      setInviteLink(groupWithInvite.inviteLink);
+      // Заменяем плейсхолдер "your bot username" на реальное имя бота @myclassapp_bot
+      let link = groupWithInvite.inviteLink;
+      if (link && (link.includes('your bot username') || link.includes('your_bot_username'))) {
+        link = link.replace(/your[_\s]?bot[_\s]?username/gi, 'myclassapp_bot');
+      }
+      setInviteLink(link);
     } catch (error: any) {
       console.error('[fetchInviteLink] Error:', error);
       // В случае ошибки используем fallback - генерируем ссылку на фронте
