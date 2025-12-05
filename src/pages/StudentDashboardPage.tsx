@@ -57,12 +57,8 @@ const StudentDashboardPage = () => {
     timezone: user?.timezone || getDefaultTimezone(),
   });
 
-  // Получение имени пользователя
-  const userName = telegramUser?.firstName && telegramUser?.lastName 
-    ? `${telegramUser.firstName} ${telegramUser.lastName}` 
-    : user?.firstName && user?.lastName
-    ? `${user.firstName} ${user.lastName}`
-    : telegramUser?.firstName || user?.firstName || 'Ученик';
+  // Получение имени пользователя из БД
+  const userName = user?.firstName || telegramUser?.firstName || 'Ученик';
 
   const handleBack = () => {
     navigate(-1);
