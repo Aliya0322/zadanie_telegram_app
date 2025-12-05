@@ -95,14 +95,16 @@ export const getCurrentUser = async (): Promise<UserFrontend> => {
 };
 
 // Обновить роль пользователя (для регистрации как учитель)
+// Бэкенд поддерживает camelCase благодаря populate_by_name=True
 export const updateRole = async (data: UpdateRoleRequest): Promise<UserFrontend> => {
   // Преобразуем middleName в patronymic для бэкенда
+  // Бэкенд принимает как camelCase, так и snake_case благодаря populate_by_name=True
   const requestData: any = {
     role: data.role,
     firstName: data.firstName,
     lastName: data.lastName,
-    patronymic: data.middleName,
-    birthdate: data.birthDate,
+    patronymic: data.middleName, // Бэкенд принимает patronymic (snake_case)
+    birthDate: data.birthDate, // Используем camelCase для согласованности
     timezone: data.timezone,
   };
   

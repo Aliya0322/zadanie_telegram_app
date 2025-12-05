@@ -530,7 +530,7 @@ const DashboardPage = () => {
                   </button>
                 </div>
                 <div className={styles.emptyText}>
-                  Нет актуального расписания
+                  Сегодня занятий нет
                 </div>
               </>
             )}

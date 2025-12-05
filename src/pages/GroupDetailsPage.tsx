@@ -17,8 +17,8 @@ import {
   ChevronUpIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
-import { getGroupById, updateGroup, deleteGroup, updateGroupStatus, removeStudentFromGroup } from '../api/groupsApi';
-import type { Group } from '../api/groupsApi';
+import { getGroupById, updateGroup, deleteGroup, updateGroupStatus, removeStudentFromGroup, getGroupWithInviteLink } from '../api/groupsApi';
+import type { Group, GroupWithInviteLink } from '../api/groupsApi';
 import { useTelegram } from '../hooks/useTelegram';
 import { useHomework } from '../features/Homework/hooks/useHomework';
 import type { CreateHomeworkDto } from '../api/homeworkApi';
@@ -45,6 +45,8 @@ const GroupDetailsPage = () => {
   const [homeworkFiles, setHomeworkFiles] = useState<File[]>([]);
   const [isCreatingHomework, setIsCreatingHomework] = useState(false);
   const [isInviteLinkVisible, setIsInviteLinkVisible] = useState(false);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [isLoadingInviteLink, setIsLoadingInviteLink] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<string | null>(null);
   const [scheduleToDelete, setScheduleToDelete] = useState<string | null>(null);
   const [homeworkToDelete, setHomeworkToDelete] = useState<string | null>(null);
@@ -328,12 +330,30 @@ const GroupDetailsPage = () => {
     }
   };
 
+  const fetchInviteLink = async () => {
+    if (!id) return;
+    
+    setIsLoadingInviteLink(true);
+    try {
+      const groupWithInvite = await getGroupWithInviteLink(id);
+      setInviteLink(groupWithInvite.inviteLink);
+    } catch (error: any) {
+      console.error('[fetchInviteLink] Error:', error);
+      // В случае ошибки используем fallback - генерируем ссылку на фронте
+      if (group?.inviteCode) {
+        setInviteLink(generateInviteLink(group.inviteCode));
+      }
+    } finally {
+      setIsLoadingInviteLink(false);
+    }
+  };
+
   const handleCopyInviteLink = () => {
-    if (!group?.inviteCode) return;
+    const linkToCopy = inviteLink || (group?.inviteCode ? generateInviteLink(group.inviteCode) : null);
     
-    const inviteLink = generateInviteLink(group.inviteCode);
+    if (!linkToCopy) return;
     
-    navigator.clipboard.writeText(inviteLink)
+    navigator.clipboard.writeText(linkToCopy)
       .then(() => {
         if (window.Telegram?.WebApp) {
           window.Telegram.WebApp.showAlert('Ссылка скопирована!');
@@ -915,7 +935,12 @@ const GroupDetailsPage = () => {
                 <div className={styles.inviteHeader}>
                   <h2 className={styles.sectionTitle}>ПРИГЛАШЕНИЕ УЧЕНИКОВ</h2>
                   <button
-                    onClick={() => setIsInviteLinkVisible(!isInviteLinkVisible)}
+                    onClick={() => {
+                      if (!isInviteLinkVisible && !inviteLink && !isLoadingInviteLink) {
+                        fetchInviteLink();
+                      }
+                      setIsInviteLinkVisible(!isInviteLinkVisible);
+                    }}
                     className={styles.inviteToggleButton}
                     aria-label={isInviteLinkVisible ? 'Скрыть ссылку' : 'Показать ссылку'}
                   >
@@ -929,27 +954,37 @@ const GroupDetailsPage = () => {
                 
                 {isInviteLinkVisible && (
                   <div className={styles.inviteBlock}>
-                    <div className={styles.inviteLinkCard}>
-                      <LinkIcon className={styles.inviteLinkIcon} />
-                      <div className={styles.inviteLinkContent}>
-                        <div className={styles.inviteLinkLabel}>Ссылка для группы</div>
-                        <div className={styles.inviteLinkValue} title={generateInviteLink(group?.inviteCode || '')}>
-                          {generateInviteLink(group?.inviteCode || '')}
+                    {isLoadingInviteLink ? (
+                      <div className={styles.inviteLinkCard}>
+                        <div className={styles.inviteLinkContent}>
+                          <div className={styles.inviteLinkLabel}>Загрузка ссылки...</div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <button
-                      onClick={handleCopyInviteLink}
-                      className={styles.inviteCopyButton}
-                    >
-                      <ClipboardDocumentIcon className={styles.inviteCopyIcon} />
-                      КОПИРОВАТЬ ССЫЛКУ
-                    </button>
-                    
-                    <div className={styles.inviteHint}>
-                      Ученик должен нажать на ссылку и запустить бота.
-                    </div>
+                    ) : (
+                      <>
+                        <div className={styles.inviteLinkCard}>
+                          <LinkIcon className={styles.inviteLinkIcon} />
+                          <div className={styles.inviteLinkContent}>
+                            <div className={styles.inviteLinkLabel}>Ссылка для группы</div>
+                            <div className={styles.inviteLinkValue} title={inviteLink || (group?.inviteCode ? generateInviteLink(group.inviteCode) : '')}>
+                              {inviteLink || (group?.inviteCode ? generateInviteLink(group.inviteCode) : '')}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <button
+                          onClick={handleCopyInviteLink}
+                          className={styles.inviteCopyButton}
+                        >
+                          <ClipboardDocumentIcon className={styles.inviteCopyIcon} />
+                          КОПИРОВАТЬ ССЫЛКУ
+                        </button>
+                        
+                        <div className={styles.inviteHint}>
+                          Ученик должен нажать на ссылку и запустить бота.
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -1417,14 +1452,6 @@ const GroupDetailsPage = () => {
               </div>
 
               <div className={styles.formActions}>
-                <button
-                  type="button"
-                  onClick={handleDeleteGroup}
-                  className={styles.formDeleteButton}
-                  disabled={isSaving || isDeleting || isTogglingStatus}
-                >
-                  {isDeleting ? 'Удаление...' : 'Удалить группу'}
-                </button>
                 <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
                   <button
                     type="button"
@@ -1442,6 +1469,21 @@ const GroupDetailsPage = () => {
                     {isSaving ? 'Сохранение...' : 'Сохранить'}
                   </button>
                 </div>
+                <a
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!isSaving && !isDeleting && !isTogglingStatus) {
+                      handleDeleteGroup();
+                    }
+                  }}
+                  className={styles.formDeleteLink}
+                  style={{ 
+                    cursor: (isSaving || isDeleting || isTogglingStatus) ? 'not-allowed' : 'pointer',
+                    opacity: (isSaving || isDeleting || isTogglingStatus) ? 0.5 : 1
+                  }}
+                >
+                  {isDeleting ? 'Удаление...' : 'Удалить группу'}
+                </a>
               </div>
             </form>
           </div>
