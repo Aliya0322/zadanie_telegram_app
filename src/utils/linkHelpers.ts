@@ -1,6 +1,6 @@
 // src/utils/linkHelpers.ts
 
-const BOT_USERNAME = 'AlphaClassBot'; // @AlphaClassBot
+const BOT_USERNAME = 'myclassapp_bot'; // @myclassapp_bot
 
 export const generateInviteLink = (inviteToken: string): string => {
   // Формат Telegram Deep Link: t.me/username?start=payload
