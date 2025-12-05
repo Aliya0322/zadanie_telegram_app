@@ -12,8 +12,27 @@ import {
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
 import type { Homework } from '../api/homeworkApi';
+import { getHomeworkByGroup } from '../api/homeworkApi';
+import { getGroups } from '../api/groupsApi';
+import { getScheduleByGroup, type Schedule } from '../api/scheduleApi';
 import { formatDateTime, isPast } from '../utils/timeFormat';
 import styles from '../features/Groups/Dashboard.module.css';
+
+interface ScheduleItem {
+  dayOfWeek: string;
+  time: string;
+  title: string;
+  group: string;
+  groupId: number;
+}
+
+interface NextClass {
+  date: Date;
+  dayOfWeek: string;
+  time: string;
+  title: string;
+  group: string;
+}
 
 const StudentDashboardPage = () => {
   const navigate = useNavigate();
@@ -23,6 +42,9 @@ const StudentDashboardPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
   const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
+  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
+  const [nextClass, setNextClass] = useState<NextClass | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   // Получение имени пользователя
   const userName = telegramUser?.firstName && telegramUser?.lastName 
@@ -40,33 +62,92 @@ const StudentDashboardPage = () => {
     // TODO: Open menu
   };
 
-  // Моковые данные расписания (в будущем из API)
-  const mockSchedule = [
-    { dayOfWeek: 'Понедельник', time: '18:00', title: 'Математика ОГЭ', group: 'Группа А', groupId: '1' },
-    { dayOfWeek: 'Среда', time: '19:30', title: 'Алгебра', group: 'Иван П.', groupId: '2' },
-    { dayOfWeek: 'Пятница', time: '18:00', title: 'Математика ОГЭ', group: 'Группа А', groupId: '1' },
-  ];
-
-  // Получить ближайшее занятие
-  const getNextClass = () => {
-    // Для демо используем первое занятие как ближайшее
-    const nextClassDate = new Date();
-    nextClassDate.setDate(nextClassDate.getDate() + 1); // Завтра
-    nextClassDate.setHours(18, 0, 0, 0);
-    
-    const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-    const dayOfWeek = daysOfWeek[nextClassDate.getDay()];
-    
-    return {
-      date: nextClassDate,
-      dayOfWeek,
-      time: '18:00',
-      title: 'Математика ОГЭ',
-      group: 'Группа А'
+  // Преобразование дня недели из API формата в русский
+  const formatDayOfWeek = (day: string): string => {
+    const mapping: Record<string, string> = {
+      'monday': 'Понедельник',
+      'tuesday': 'Вторник',
+      'wednesday': 'Среда',
+      'thursday': 'Четверг',
+      'friday': 'Пятница',
+      'saturday': 'Суббота',
+      'sunday': 'Воскресенье',
     };
+    return mapping[day.toLowerCase()] || day;
   };
 
-  const nextClass = getNextClass();
+  // Форматирование времени в формат HH:mm
+  const formatTime = (timeString: string): string => {
+    const parts = timeString.split(':');
+    const hours = parts[0]?.padStart(2, '0') || '00';
+    const minutes = parts[1]?.padStart(2, '0') || '00';
+    return `${hours}:${minutes}`;
+  };
+
+  // Получить номер дня недели (0 = воскресенье, 1 = понедельник, ...)
+  const getDayOfWeekNumber = (dayName: string): number => {
+    const mapping: Record<string, number> = {
+      'Понедельник': 1,
+      'Вторник': 2,
+      'Среда': 3,
+      'Четверг': 4,
+      'Пятница': 5,
+      'Суббота': 6,
+      'Воскресенье': 0,
+    };
+    return mapping[dayName] ?? -1;
+  };
+
+  // Найти ближайшее занятие из расписания
+  const findNextClass = (scheduleItems: ScheduleItem[], groupName: string): NextClass | null => {
+    if (scheduleItems.length === 0) return null;
+
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 = воскресенье, 1 = понедельник, ...
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // время в минутах
+
+    let nearestClass: NextClass | null = null;
+    let minDaysDiff = Infinity;
+
+    scheduleItems.forEach((item) => {
+      const itemDayNumber = getDayOfWeekNumber(item.dayOfWeek);
+      if (itemDayNumber === -1) return;
+
+      const [hours, minutes] = item.time.split(':').map(Number);
+      const itemTime = hours * 60 + minutes;
+
+      // Вычисляем, через сколько дней будет это занятие
+      let daysDiff = itemDayNumber - currentDay;
+      if (daysDiff < 0) {
+        // Занятие уже прошло на этой неделе, берем следующую неделю
+        daysDiff += 7;
+      } else if (daysDiff === 0 && itemTime <= currentTime) {
+        // Занятие сегодня, но уже прошло, берем следующую неделю
+        daysDiff = 7;
+      }
+
+      // Если это занятие ближе, чем текущее ближайшее
+      if (daysDiff < minDaysDiff || (daysDiff === minDaysDiff && itemTime < (nearestClass ? parseInt(nearestClass.time.split(':')[0]) * 60 + parseInt(nearestClass.time.split(':')[1]) : Infinity))) {
+        const nextClassDate = new Date(now);
+        nextClassDate.setDate(nextClassDate.getDate() + daysDiff);
+        nextClassDate.setHours(hours, minutes, 0, 0);
+
+        const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        const dayOfWeek = daysOfWeek[nextClassDate.getDay()];
+
+        nearestClass = {
+          date: nextClassDate,
+          dayOfWeek,
+          time: item.time,
+          title: item.title,
+          group: groupName,
+        };
+        minDaysDiff = daysDiff;
+      }
+    });
+
+    return nearestClass;
+  };
   
   const formatDateShort = (date: Date): string => {
     return date.toLocaleDateString('ru-RU', {
@@ -76,39 +157,63 @@ const StudentDashboardPage = () => {
   };
 
   useEffect(() => {
-    // Загрузка активных заданий для ученика
-    fetchActiveHomework();
+    // Загрузка данных для студента
+    fetchStudentData();
   }, []);
 
-  const fetchActiveHomework = async () => {
+  const fetchStudentData = async () => {
+    setIsLoadingData(true);
     setIsLoading(true);
     try {
-      // В реальном приложении здесь будет API для получения заданий студента
-      // Пока используем моковые данные
-      // Моковые данные с файлами (в реальном приложении файлы будут приходить с API)
-      const mockHomework: Homework[] = [
-        {
-          id: 1,
-          groupId: 1,
-          description: 'Квадратные уравнения: Решить номера №124, 125, 128 из учебника',
-          deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // через 2 дня
-          createdAt: new Date().toISOString(),
-          reminderSent: false,
-        },
-        {
-          id: 2,
-          groupId: 2,
-          description: 'Тригонометрия: Выполнить упражнения на стр. 45',
-          deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // через 5 дней
-          createdAt: new Date().toISOString(),
-          reminderSent: false,
-        },
-      ];
-      setActiveHomework(mockHomework);
+      // Получаем группы студента
+      const groups = await getGroups();
+      const activeGroup = groups.find(g => g.isActive) || groups[0];
+      
+      if (!activeGroup) {
+        console.log('Student is not in any group');
+        setSchedule([]);
+        setActiveHomework([]);
+        setNextClass(null);
+        return;
+      }
+
+      // Получаем расписание группы
+      try {
+        const groupSchedule = await getScheduleByGroup(activeGroup.id);
+        const transformedSchedule: ScheduleItem[] = groupSchedule.map((s: Schedule) => ({
+          dayOfWeek: formatDayOfWeek(s.dayOfWeek),
+          time: formatTime(s.timeAt),
+          title: activeGroup.name, // Используем название группы как название предмета
+          group: activeGroup.name,
+          groupId: activeGroup.id,
+        }));
+        setSchedule(transformedSchedule);
+
+        // Находим ближайшее занятие
+        const nearest = findNextClass(transformedSchedule, activeGroup.name);
+        setNextClass(nearest);
+      } catch (error) {
+        console.error('Error fetching schedule:', error);
+        setSchedule([]);
+        setNextClass(null);
+      }
+
+      // Получаем задания группы
+      try {
+        const homework = await getHomeworkByGroup(String(activeGroup.id));
+        setActiveHomework(homework);
+      } catch (error) {
+        console.error('Error fetching homework:', error);
+        setActiveHomework([]);
+      }
     } catch (error) {
-      console.error('Error fetching homework:', error);
+      console.error('Error fetching student data:', error);
+      setSchedule([]);
+      setActiveHomework([]);
+      setNextClass(null);
     } finally {
       setIsLoading(false);
+      setIsLoadingData(false);
     }
   };
 
@@ -166,7 +271,20 @@ const StudentDashboardPage = () => {
           </div>
           
           <div className={styles.scheduleList}>
-          {mockSchedule.map((item, index) => (
+          {isLoadingData ? (
+            <div className={styles.scheduleItem}>
+              <div className={styles.scheduleItemContent}>
+                <span className={styles.scheduleTime}>Загрузка расписания...</span>
+              </div>
+            </div>
+          ) : schedule.length === 0 ? (
+            <div className={styles.scheduleItem}>
+              <div className={styles.scheduleItemContent}>
+                <span className={styles.scheduleTime}>Нет расписания</span>
+              </div>
+            </div>
+          ) : (
+            schedule.map((item, index) => (
               <div key={index} className={styles.scheduleItem}>
                 <ClockIcon className={styles.clockIcon} />
                 <div className={styles.scheduleItemContent}>
@@ -176,27 +294,30 @@ const StudentDashboardPage = () => {
                   <span className={styles.scheduleGroup}>({item.group})</span>
                 </div>
               </div>
-            ))}
+            ))
+          )}
           </div>
 
           {/* Ближайшее занятие */}
-          <div className={styles.nextClassSection}>
-            <div className={styles.nextClassTitle}>
-              Ближайшее занятие
-            </div>
-            <div className={styles.scheduleItem}>
-              <CalendarIcon className={`${styles.clockIcon} ${styles.blueIcon}`} />
-              <div className={styles.scheduleItemContent}>
-                <div className={styles.nextClassContent}>
-                  <span className={styles.scheduleSubject}>{nextClass.title}</span>
-                  <span className={styles.nextClassDate}>
-                    {formatDateShort(nextClass.date)}, {nextClass.dayOfWeek}, {nextClass.time}
-                  </span>
-                  <span className={styles.scheduleGroup}>({nextClass.group})</span>
+          {nextClass && (
+            <div className={styles.nextClassSection}>
+              <div className={styles.nextClassTitle}>
+                Ближайшее занятие
+              </div>
+              <div className={styles.scheduleItem}>
+                <CalendarIcon className={`${styles.clockIcon} ${styles.blueIcon}`} />
+                <div className={styles.scheduleItemContent}>
+                  <div className={styles.nextClassContent}>
+                    <span className={styles.scheduleSubject}>{nextClass.title}</span>
+                    <span className={styles.nextClassDate}>
+                      {formatDateShort(nextClass.date)}, {nextClass.dayOfWeek}, {nextClass.time}
+                    </span>
+                    <span className={styles.scheduleGroup}>({nextClass.group})</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
       </Block>
 
       {/* Мои активные задания */}
