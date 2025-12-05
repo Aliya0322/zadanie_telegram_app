@@ -829,53 +829,60 @@ const GroupDetailsPage = () => {
               <h2 className={styles.sectionTitle}>АКТУАЛЬНЫЕ ЗАДАНИЯ</h2>
               
               <div className={styles.pastHomeworkList}>
-                {homework.length > 0 ? (
-                  homework.map((task) => {
+                {(() => {
+                  const now = new Date();
+                  const activeTasks = homework.filter(task => {
                     const dueDate = new Date(task.deadline);
-                    const isPast = dueDate < new Date();
-                    const formattedDate = dueDate.toLocaleDateString('ru-RU', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric'
-                    });
-                    
-                    return (
-                      <div key={task.id} className={styles.pastHomeworkCard}>
-                        <DocumentTextIcon className={`${styles.pastHomeworkIcon} ${isPast ? styles.iconGray : styles.iconBlue}`} />
-                        <div className={`${styles.pastHomeworkContent} ${styles.flexContent}`}>
-                          <div className={styles.pastHomeworkTitle}>{task.description}</div>
-                          <div className={styles.pastHomeworkStatus}>
-                            Дедлайн: {formattedDate}
+                    return dueDate >= now;
+                  });
+                  
+                  return activeTasks.length > 0 ? (
+                    activeTasks.map((task) => {
+                      const dueDate = new Date(task.deadline);
+                      const formattedDate = dueDate.toLocaleDateString('ru-RU', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      });
+                      
+                      return (
+                        <div key={task.id} className={styles.pastHomeworkCard}>
+                          <DocumentTextIcon className={`${styles.pastHomeworkIcon} ${styles.iconBlue}`} />
+                          <div className={`${styles.pastHomeworkContent} ${styles.flexContent}`}>
+                            <div className={styles.pastHomeworkTitle}>{task.description}</div>
+                            <div className={styles.pastHomeworkStatus}>
+                              Дедлайн: {formattedDate}
+                            </div>
                           </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenHomeworkModal(String(task.id));
+                            }}
+                            className={styles.scheduleEditButton}
+                            aria-label="Редактировать"
+                          >
+                            <PencilIcon className={styles.scheduleEditIcon} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteHomework(String(task.id));
+                            }}
+                            className={styles.removeStudentButton}
+                            aria-label="Удалить"
+                          >
+                            <TrashIcon className={styles.removeStudentIcon} />
+                          </button>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenHomeworkModal(String(task.id));
-                          }}
-                          className={styles.scheduleEditButton}
-                          aria-label="Редактировать"
-                        >
-                          <PencilIcon className={styles.scheduleEditIcon} />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteHomework(String(task.id));
-                          }}
-                          className={styles.removeStudentButton}
-                          aria-label="Удалить"
-                        >
-                          <TrashIcon className={styles.removeStudentIcon} />
-                        </button>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className={styles.currentHomeworkCard}>
-                    <div className={styles.currentHomeworkText}>Нет заданий</div>
-                  </div>
-                )}
+                      );
+                    })
+                  ) : (
+                    <div className={styles.currentHomeworkCard}>
+                      <div className={styles.currentHomeworkText}>Нет заданий</div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -892,6 +899,64 @@ const GroupDetailsPage = () => {
             Добавить задание
           </button>
         )}
+
+        {/* Секция прошедших заданий */}
+        {activeTab === 'tasks' && (() => {
+          const now = new Date();
+          const pastTasks = homework.filter(task => {
+            const dueDate = new Date(task.deadline);
+            return dueDate < now;
+          });
+          
+          return pastTasks.length > 0 ? (
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>ПРОШЕДШИЕ ЗАДАНИЯ</h2>
+              
+              <div className={styles.pastHomeworkList}>
+                {pastTasks.map((task) => {
+                  const dueDate = new Date(task.deadline);
+                  const formattedDate = dueDate.toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  });
+                  
+                  return (
+                    <div key={task.id} className={styles.pastHomeworkCard}>
+                      <DocumentTextIcon className={`${styles.pastHomeworkIcon} ${styles.iconGray}`} />
+                      <div className={`${styles.pastHomeworkContent} ${styles.flexContent}`}>
+                        <div className={styles.pastHomeworkTitle}>{task.description}</div>
+                        <div className={styles.pastHomeworkStatus}>
+                          Дедлайн: {formattedDate}
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenHomeworkModal(String(task.id));
+                        }}
+                        className={styles.scheduleEditButton}
+                        aria-label="Редактировать"
+                      >
+                        <PencilIcon className={styles.scheduleEditIcon} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteHomework(String(task.id));
+                        }}
+                        className={styles.removeStudentButton}
+                        aria-label="Удалить"
+                      >
+                        <TrashIcon className={styles.removeStudentIcon} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null;
+        })()}
 
         {activeTab === 'students' && (
           <>
@@ -1479,7 +1544,8 @@ const GroupDetailsPage = () => {
                   className={styles.formDeleteLink}
                   style={{ 
                     cursor: (isSaving || isDeleting || isTogglingStatus) ? 'not-allowed' : 'pointer',
-                    opacity: (isSaving || isDeleting || isTogglingStatus) ? 0.5 : 1
+                    opacity: (isSaving || isDeleting || isTogglingStatus) ? 0.5 : 1,
+                    textDecoration: 'none'
                   }}
                 >
                   {isDeleting ? 'Удаление...' : 'Удалить группу'}
