@@ -6,8 +6,7 @@ import {
   ClockIcon, 
   DocumentTextIcon,
   ArrowLeftIcon,
-  EllipsisVerticalIcon,
-  XMarkIcon
+  EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
@@ -15,7 +14,7 @@ import type { Homework } from '../api/homeworkApi';
 import { getHomeworkByGroup } from '../api/homeworkApi';
 import { getGroups } from '../api/groupsApi';
 import { getScheduleByGroup, type Schedule } from '../api/scheduleApi';
-import { formatDate, formatDateTime, isPast } from '../utils/timeFormat';
+import { formatDate, isPast } from '../utils/timeFormat';
 import styles from '../features/Groups/Dashboard.module.css';
 
 interface ScheduleItem {
@@ -42,8 +41,6 @@ const StudentDashboardPage = () => {
   const { user: telegramUser } = useTelegram();
   const [activeHomework, setActiveHomework] = useState<Homework[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
-  const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
   const [nextClass, setNextClass] = useState<NextClass | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -365,11 +362,7 @@ const StudentDashboardPage = () => {
               return (
                   <div 
                   key={homework.id}
-                    className={`${styles.groupCard} ${styles.clickableCard}`}
-                    onClick={() => {
-                      setSelectedHomework(homework);
-                      setIsHomeworkModalOpen(true);
-                    }}
+                    className={styles.groupCard}
                   >
                     <div className={styles.groupCardContent}>
                       <DocumentTextIcon className={`${styles.groupIcon} ${styles.homeworkIcon}`} />
@@ -404,52 +397,6 @@ const StudentDashboardPage = () => {
           )}
         </div>
       </div>
-
-      {/* Модальное окно просмотра задания */}
-      {isHomeworkModalOpen && selectedHomework && (
-        <div 
-          className={styles.homeworkModal} 
-          onClick={() => {
-            setIsHomeworkModalOpen(false);
-            setSelectedHomework(null);
-          }}
-        >
-          <div 
-            className={styles.homeworkModalContent} 
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className={styles.homeworkModalHeader}>
-              <h2 className={styles.homeworkModalTitle}>{selectedHomework.description}</h2>
-              <button 
-                onClick={() => {
-                  setIsHomeworkModalOpen(false);
-                  setSelectedHomework(null);
-                }} 
-                className={styles.homeworkModalCloseButton}
-              >
-                <XMarkIcon className={styles.homeworkModalCloseIcon} />
-              </button>
-            </div>
-            
-            <div className={`${styles.homeworkForm} ${styles.modalFormPadding}`}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Описание задания</label>
-                <div className={styles.modalDescriptionBox}>
-                  {selectedHomework.description}
-                </div>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Дедлайн</label>
-                <div className={styles.modalDateBox}>
-                  {formatDateTime(selectedHomework.deadline)}
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
     </Page>
   );
 };

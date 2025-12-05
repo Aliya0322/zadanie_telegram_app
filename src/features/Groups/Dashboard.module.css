@@ -181,6 +181,7 @@
 .descriptionText {
   font-size: 13px;
   color: #6b7280;
+  text-align: left;
 }
 
 .metaRow {
@@ -188,6 +189,7 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
 .deadlineBadge {
@@ -203,6 +205,7 @@
 .deadlineText {
   font-size: 12px;
   color: #9ca3af;
+  text-align: left;
 }
 
 .smallClockIcon {
@@ -564,6 +567,7 @@
   margin-bottom: 6px;
   line-height: 1.4;
   word-wrap: break-word;
+  text-align: left;
 }
 
 @media (max-width: 480px) {
