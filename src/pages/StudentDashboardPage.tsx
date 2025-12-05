@@ -369,9 +369,6 @@ const StudentDashboardPage = () => {
                       <div className={`${styles.groupInfo} ${styles.flexInfo}`}>
                         <div className={styles.groupName}>{homework.description}</div>
                         <div className={`${styles.groupMeta} ${styles.columnMeta}`}>
-                          <div className={styles.descriptionText}>
-                            {homework.description}
-                          </div>
                           <div className={styles.metaRow}>
                             <div 
                               className={styles.deadlineBadge}
