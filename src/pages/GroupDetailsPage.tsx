@@ -840,48 +840,48 @@ const GroupDetailsPage = () => {
                   return activeTasks.length > 0 ? (
                     activeTasks.map((task) => {
                       const dueDate = new Date(task.deadline);
-                      const formattedDate = dueDate.toLocaleDateString('ru-RU', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
-                      });
-                      
-                      return (
-                        <div key={task.id} className={styles.pastHomeworkCard}>
+                    const formattedDate = dueDate.toLocaleDateString('ru-RU', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    });
+                    
+                    return (
+                      <div key={task.id} className={styles.pastHomeworkCard}>
                           <DocumentTextIcon className={`${styles.pastHomeworkIcon} ${styles.iconBlue}`} />
-                          <div className={`${styles.pastHomeworkContent} ${styles.flexContent}`}>
-                            <div className={styles.pastHomeworkTitle}>{task.description}</div>
-                            <div className={styles.pastHomeworkStatus}>
-                              Дедлайн: {formattedDate}
-                            </div>
+                        <div className={`${styles.pastHomeworkContent} ${styles.flexContent}`}>
+                          <div className={styles.pastHomeworkTitle}>{task.description}</div>
+                          <div className={styles.pastHomeworkStatus}>
+                            Дедлайн: {formattedDate}
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenHomeworkModal(String(task.id));
-                            }}
-                            className={styles.scheduleEditButton}
-                            aria-label="Редактировать"
-                          >
-                            <PencilIcon className={styles.scheduleEditIcon} />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteHomework(String(task.id));
-                            }}
-                            className={styles.removeStudentButton}
-                            aria-label="Удалить"
-                          >
-                            <TrashIcon className={styles.removeStudentIcon} />
-                          </button>
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div className={styles.currentHomeworkCard}>
-                      <div className={styles.currentHomeworkText}>Нет заданий</div>
-                    </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenHomeworkModal(String(task.id));
+                          }}
+                          className={styles.scheduleEditButton}
+                          aria-label="Редактировать"
+                        >
+                          <PencilIcon className={styles.scheduleEditIcon} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteHomework(String(task.id));
+                          }}
+                          className={styles.removeStudentButton}
+                          aria-label="Удалить"
+                        >
+                          <TrashIcon className={styles.removeStudentIcon} />
+                        </button>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className={styles.currentHomeworkCard}>
+                    <div className={styles.currentHomeworkText}>Нет заданий</div>
+                  </div>
                   );
                 })()}
               </div>
