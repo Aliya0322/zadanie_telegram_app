@@ -368,19 +368,21 @@ const StudentDashboardPage = () => {
                       <DocumentTextIcon className={`${styles.groupIcon} ${styles.homeworkIcon}`} />
                       <div className={`${styles.groupInfo} ${styles.flexInfo}`}>
                         <div className={styles.groupName}>{homework.description}</div>
-                        <div className={styles.metaRow}>
-                          <div 
-                            className={styles.deadlineBadge}
-                            style={{
-                              backgroundColor: deadlineStatus.bgColor,
-                              color: deadlineStatus.color,
-                            }}
-                          >
-                            <ClockIcon className={styles.smallClockIcon} />
-                            {deadlineStatus.text}
+                        <div className={`${styles.groupMeta} ${styles.columnMeta}`}>
+                          <div className={styles.metaRow}>
+                            <div 
+                              className={styles.deadlineBadge}
+                              style={{
+                                backgroundColor: deadlineStatus.bgColor,
+                                color: deadlineStatus.color,
+                              }}
+                            >
+                              <ClockIcon className={styles.smallClockIcon} />
+                              {deadlineStatus.text}
+                            </div>
                           </div>
                           <span className={styles.deadlineText}>
-                            До: {formatDate(homework.deadline)}
+                            Выполните до: {formatDate(homework.deadline)}
                           </span>
                         </div>
                       </div>
