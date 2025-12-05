@@ -71,7 +71,7 @@ const transformDashboardGroup = (apiData: any): Group => {
     : [];
   
   return {
-    id: Number(id),
+    id: id !== undefined ? Number(id) : 0,
     name: name || '',
     teacherId: 0, // Не предоставляется в DashboardGroupResponse
     inviteCode: inviteCode || '',
@@ -94,7 +94,7 @@ const transformTodaySchedule = (apiData: any): ScheduleItem => {
   const timeAt = timeParts.length >= 2 ? `${timeParts[0]}:${timeParts[1]}` : timeAtRaw;
   
   return {
-    id: String(id),
+    id: id !== undefined ? String(id) : '',
     groupId: '', // Не предоставляется в TodayScheduleResponse
     groupName: groupName || '',
     startTime: timeAt,
@@ -109,7 +109,7 @@ export const getDashboard = async (): Promise<DashboardData> => {
   const response = await apiClient.get<any>('/user/dashboard');
   const apiData = response.data;
   
-  const userRole = getVal(apiData, 'userRole', 'user_role');
+  const userRole = getVal(apiData, 'userRole', 'user_role') || 'student';
   const groups = getVal(apiData, 'groups') || [];
   const todaySchedule = getVal(apiData, 'todaySchedule', 'today_schedule') || [];
   const activeHomeworks = getVal(apiData, 'activeHomeworks', 'active_homeworks') || [];
@@ -118,7 +118,7 @@ export const getDashboard = async (): Promise<DashboardData> => {
     userRole: userRole,
     groups: Array.isArray(groups) ? groups.map(transformDashboardGroup) : [],
     schedule: Array.isArray(todaySchedule) ? todaySchedule.map(transformTodaySchedule) : [],
-    activeHomework: activeHomeworks,
+    activeHomework: Array.isArray(activeHomeworks) ? activeHomeworks : [],
   };
 };
 
@@ -141,6 +141,6 @@ export const getSchedule = async (): Promise<{
   
   return {
     schedule: Array.isArray(schedules) ? schedules.map(transformTodaySchedule) : [],
-    activeHomework: activeHomeworks,
+    activeHomework: Array.isArray(activeHomeworks) ? activeHomeworks : [],
   };
 };
