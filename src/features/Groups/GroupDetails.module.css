@@ -125,6 +125,16 @@
   margin-bottom: 24px;
 }
 
+.pastHomeworkSection {
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .pastHomeworkSection {
+    margin-top: 12px;
+  }
+}
+
 .sectionTitle {
   font-size: 12px;
   font-weight: 700;

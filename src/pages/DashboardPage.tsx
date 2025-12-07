@@ -4,8 +4,8 @@ import { Page, Navbar, Block } from 'konsta/react';
 import { ClockIcon, CalendarIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../features/Auth/hooks/useAuth';
 import { useTelegram } from '../hooks/useTelegram';
-import { createGroup } from '../api/groupsApi';
-import type { CreateGroupDto } from '../api/groupsApi';
+import { createGroup, getGroups } from '../api/groupsApi';
+import type { CreateGroupDto, Group } from '../api/groupsApi';
 import { getDashboard } from '../api/userApi';
 import type { DashboardData } from '../api/userApi';
 import { updateProfile, deleteProfile } from '../api/authApi';
@@ -46,6 +46,7 @@ const DashboardPage = () => {
   const [groupName, setGroupName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -104,8 +105,12 @@ const DashboardPage = () => {
   // Обновление списка групп после создания новой
   const handleGroupCreated = async () => {
     try {
-      const data = await getDashboard();
-      setDashboardData(data);
+      const [dashboardDataResult, groupsResult] = await Promise.all([
+        getDashboard(),
+        getGroups()
+      ]);
+      setDashboardData(dashboardDataResult);
+      setGroups(groupsResult);
     } catch (error) {
       console.error('Error refreshing groups:', error);
     }
@@ -419,8 +424,13 @@ const DashboardPage = () => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        const data = await getDashboard();
-        setDashboardData(data);
+        // Загружаем данные дашборда и группы параллельно
+        const [dashboardDataResult, groupsResult] = await Promise.all([
+          getDashboard(),
+          getGroups()
+        ]);
+        setDashboardData(dashboardDataResult);
+        setGroups(groupsResult);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         // В случае ошибки устанавливаем пустые данные
@@ -430,6 +440,7 @@ const DashboardPage = () => {
           schedule: [],
           activeHomework: [],
         });
+        setGroups([]);
       } finally {
         setIsLoading(false);
       }
@@ -443,9 +454,9 @@ const DashboardPage = () => {
   const calendarDays = generateCalendar();
   const calendarMonthYear = getCalendarMonthYear();
   
-  // Используем только данные из API (без fallback на моковые данные)
+  // Используем реальные данные групп из getGroups() для точного подсчета студентов
   // Сортируем группы по ID для стабильного порядка отображения
-  const groups = (dashboardData?.groups || []).sort((a, b) => a.id - b.id);
+  const sortedGroups = groups.sort((a, b) => a.id - b.id);
   
   // Фильтруем расписание на сегодня
   const today = new Date();
@@ -549,9 +560,9 @@ const DashboardPage = () => {
                 </div>
               </div>
             </div>
-          ) : groups.length > 0 ? (
+          ) : sortedGroups.length > 0 ? (
             <div className={styles.groupsList}>
-              {groups.map((group) => {
+              {sortedGroups.map((group) => {
                 console.log('[DashboardPage] Rendering group:', {
                   id: group.id,
                   idType: typeof group.id,

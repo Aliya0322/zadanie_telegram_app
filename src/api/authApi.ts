@@ -131,3 +131,9 @@ export const updateProfile = async (data: UpdateRoleRequest): Promise<UserFronte
 export const deleteProfile = async (): Promise<void> => {
   await apiClient.delete('/auth/me');
 };
+
+// Получить пользователя по ID (для получения информации о студентах)
+export const getUserById = async (userId: string | number): Promise<UserFrontend> => {
+  const response = await apiClient.get<User>(`/auth/users/${userId}`);
+  return transformUser(response.data);
+};

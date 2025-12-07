@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { getGroupById, updateGroup, deleteGroup, updateGroupStatus, removeStudentFromGroup, getGroupWithInviteLink } from '../api/groupsApi';
 import type { Group } from '../api/groupsApi';
+import { getUserById, type UserFrontend } from '../api/authApi';
 import { useTelegram } from '../hooks/useTelegram';
 import { useHomework } from '../features/Homework/hooks/useHomework';
 import type { CreateHomeworkDto } from '../api/homeworkApi';
@@ -70,6 +71,8 @@ const GroupDetailsPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
+  const [studentsInfo, setStudentsInfo] = useState<Record<number, UserFrontend>>({});
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const { fetchHomework, create, update, remove, homework } = useHomework(id || undefined);
 
   useEffect(() => {
@@ -83,8 +86,40 @@ const GroupDetailsPage = () => {
   useEffect(() => {
     if (group) {
       setGroupName(group.name);
+      fetchStudentsInfo();
     }
   }, [group]);
+
+  const fetchStudentsInfo = async () => {
+    if (!group || !group.students || group.students.length === 0) {
+      setStudentsInfo({});
+      return;
+    }
+
+    setIsLoadingStudents(true);
+    const studentsData: Record<number, UserFrontend> = {};
+
+    try {
+      // Загружаем информацию о каждом студенте
+      await Promise.all(
+        group.students.map(async (studentId) => {
+          try {
+            const studentInfo = await getUserById(studentId);
+            studentsData[studentId] = studentInfo;
+          } catch (error) {
+            console.error(`[fetchStudentsInfo] Error fetching student ${studentId}:`, error);
+            // Если не удалось загрузить информацию, оставляем без данных
+          }
+        })
+      );
+
+      setStudentsInfo(studentsData);
+    } catch (error) {
+      console.error('[fetchStudentsInfo] Error fetching students info:', error);
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
 
   const fetchSchedule = async () => {
     if (!id) return;
@@ -384,11 +419,18 @@ const GroupDetailsPage = () => {
     try {
       const studentIdNum = Number(studentToDelete);
       await removeStudentFromGroup(String(group.id), String(studentIdNum));
-      
+
       // Обновляем локальное состояние
       setGroup({
         ...group,
         students: group.students?.filter(id => id !== studentIdNum) || []
+      });
+
+      // Удаляем информацию о студенте из состояния
+      setStudentsInfo(prev => {
+        const updated = { ...prev };
+        delete updated[studentIdNum];
+        return updated;
       });
 
       // Показываем уведомление об успехе
@@ -875,7 +917,7 @@ const GroupDetailsPage = () => {
           });
           
           return pastTasks.length > 0 ? (
-            <div className={styles.section}>
+            <div className={`${styles.section} ${styles.pastHomeworkSection}`}>
               <h2 className={styles.sectionTitle}>ПРОШЕДШИЕ ЗАДАНИЯ</h2>
               
               <div className={styles.pastHomeworkList}>
@@ -930,28 +972,39 @@ const GroupDetailsPage = () => {
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>УЧЕНИКИ</h2>
               <div className={styles.pastHomeworkList}>
-                {group?.students && group.students.length > 0 ? (
-                  group.students.map((studentId, index) => (
-                    <div key={index} className={styles.pastHomeworkCard}>
-                      <UserGroupIcon className={`${styles.pastHomeworkIcon} ${styles.iconBlue}`} />
-                      <div className={styles.pastHomeworkContent}>
-                        <div className={styles.pastHomeworkTitle}>Ученик #{studentId}</div>
-                        <div className={`${styles.pastHomeworkStatus} ${styles.greenStatus}`}>
-                          Активен
+                {isLoadingStudents ? (
+                  <div className={styles.currentHomeworkCard}>
+                    <div className={styles.currentHomeworkText}>Загрузка информации о учениках...</div>
+                  </div>
+                ) : group?.students && group.students.length > 0 ? (
+                  group.students.map((studentId, index) => {
+                    const studentInfo = studentsInfo[studentId];
+                    const displayName = studentInfo 
+                      ? `${studentInfo.lastName} ${studentInfo.firstName}`.trim() || `Ученик #${studentId}`
+                      : `Ученик #${studentId}`;
+                    
+                    return (
+                      <div key={index} className={styles.pastHomeworkCard}>
+                        <UserGroupIcon className={`${styles.pastHomeworkIcon} ${styles.iconBlue}`} />
+                        <div className={styles.pastHomeworkContent}>
+                          <div className={styles.pastHomeworkTitle}>{displayName}</div>
+                          <div className={`${styles.pastHomeworkStatus} ${styles.greenStatus}`}>
+                            Активен
+                          </div>
                         </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveStudent(studentId);
+                          }}
+                          className={styles.removeStudentButton}
+                          aria-label="Удалить ученика"
+                        >
+                          <TrashIcon className={styles.removeStudentIcon} />
+                        </button>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveStudent(studentId);
-                        }}
-                        className={styles.removeStudentButton}
-                        aria-label="Удалить ученика"
-                      >
-                        <TrashIcon className={styles.removeStudentIcon} />
-                      </button>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className={styles.currentHomeworkCard}>
                     <div className={styles.currentHomeworkText}>Нет учеников в группе</div>
