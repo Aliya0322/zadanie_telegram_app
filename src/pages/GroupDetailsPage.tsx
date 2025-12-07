@@ -1477,7 +1477,7 @@ const GroupDetailsPage = () => {
                 >
                   {isTogglingStatus 
                     ? 'Изменение...' 
-                    : !group.isActive 
+                    : group.isActive === false
                       ? 'Возобновить' 
                       : 'Приостановить'}
                 </button>
