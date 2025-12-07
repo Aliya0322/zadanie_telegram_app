@@ -276,7 +276,9 @@ const GroupDetailsPage = () => {
 
     setIsTogglingStatus(true);
     try {
-      const newStatus = !group.isActive;
+      // Если isActive не определен или true, устанавливаем false (приостановить)
+      // Если isActive === false, устанавливаем true (возобновить)
+      const newStatus = group.isActive === false ? true : false;
       const updatedGroup = await updateGroupStatus(id, newStatus);
       setGroup(updatedGroup);
 
@@ -1481,7 +1483,7 @@ const GroupDetailsPage = () => {
                       ? 'Возобновить' 
                       : 'Приостановить'}
                 </button>
-                {!group.isActive && (
+                {group.isActive === false && (
                   <p className={styles.statusHint}>Группа приостановлена</p>
                 )}
               </div>
