@@ -1478,8 +1478,8 @@ const GroupDetailsPage = () => {
                   {isTogglingStatus 
                     ? 'Изменение...' 
                     : !group.isActive 
-                      ? 'Возобновить группу' 
-                      : 'Приостановить группу'}
+                      ? 'Возобновить' 
+                      : 'Приостановить'}
                 </button>
                 {!group.isActive && (
                   <p className={styles.statusHint}>Группа приостановлена</p>
